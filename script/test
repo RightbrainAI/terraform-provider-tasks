@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+
+go test -v -cover -timeout 10m "${HERE}/../internal/..."
