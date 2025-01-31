@@ -24,6 +24,10 @@ var _ provider.Provider = &RightbrainProvider{}
 var _ provider.ProviderWithFunctions = &RightbrainProvider{}
 var _ provider.ProviderWithEphemeralResources = &RightbrainProvider{}
 
+const (
+	ProviderName = "rightbrain"
+)
+
 // RightbrainProvider defines the provider implementation.
 type RightbrainProvider struct {
 	// version is set to the provider version on release, "dev" when the

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	PublishedProviderURL = "registry.terraform.io/rightbrain-ai/tasks-terraform-provider"
+	ProviderURL = "registry.terraform.io/RightbrainAI/terraform-provider-tasks"
 )
 
 var (
@@ -33,7 +33,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address:         PublishedProviderURL,
+		Address:         ProviderURL,
 		Debug:           debug,
 		ProtocolVersion: 6,
 	}

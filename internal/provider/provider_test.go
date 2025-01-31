@@ -11,13 +11,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/echoprovider"
 )
 
-var DefaultProvider = New("test")()
+var (
+	DefaultProvider = New("test")()
+)
 
 // testAccProtoV6ProviderFactories is used to instantiate a provider during acceptance testing.
 // The factory function is called for each Terraform CLI command to create a provider
 // server that the CLI can connect to and interact with.
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"rightbrain": providerserver.NewProtocol6WithError(DefaultProvider),
+	ProviderName: providerserver.NewProtocol6WithError(DefaultProvider),
 }
 
 // testAccProtoV6ProviderFactoriesWithEcho includes the echo provider alongside the rightbrain provider.
@@ -25,7 +27,7 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 // The echoprovider is used to arrange tests by echoing ephemeral data into the Terraform state.
 // This lets the data be referenced in test assertions with state checks.
 var testAccProtoV6ProviderFactoriesWithEcho = map[string]func() (tfprotov6.ProviderServer, error){
-	"rightbrain": providerserver.NewProtocol6WithError(DefaultProvider),
+	ProviderName: providerserver.NewProtocol6WithError(DefaultProvider),
 	"echo":       echoprovider.NewProviderServer(),
 }
 
