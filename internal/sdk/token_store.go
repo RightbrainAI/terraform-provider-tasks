@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -57,12 +58,16 @@ func (ts *TokenStore) Fetch(ctx context.Context, clientID string, clientSecret s
 		return ts.token.value, nil
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, ts.tokenServerURL.String(), nil)
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, ts.tokenServerURL.String(), strings.NewReader(data.Encode()))
 	if err != nil {
 		return "", err
 	}
 
 	req.SetBasicAuth(clientID, clientSecret)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := ts.httpClient.Do(req)
 	if err != nil {

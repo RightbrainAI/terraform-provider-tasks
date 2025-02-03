@@ -108,7 +108,7 @@ func TestTasksClient(t *testing.T) {
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
 		})
-		in := &sdk.Task{
+		in := &sdk.CreateTaskRequest{
 			Description: "A task to pre-triage user onboarding before IDV.",
 		}
 		task, err := tc.Create(ctx, in)

@@ -20,14 +20,16 @@ func TestTokenStore(t *testing.T) {
 
 	ctx := context.Background()
 
+	mockOAuthTokenResponse := []byte(`{
+		"access_token": "dummy-access-token",
+		"expires_in": 3599
+	}`)
+
 	t.Run("test that it returns a cached token", func(t *testing.T) {
 		calls := 0
 		mockOAuthServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			calls++
-			_, _ = w.Write([]byte(`{
-				"access_token": "dummy-access-token",
-				"expires_in": 3600
-			}`))
+			_, _ = w.Write(mockOAuthTokenResponse)
 		}))
 		defer mockOAuthServer.Close()
 
@@ -50,10 +52,7 @@ func TestTokenStore(t *testing.T) {
 		calls := 0
 		mockOAuthServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			calls++
-			_, _ = w.Write([]byte(`{
-				"access_token": "dummy-access-token",
-				"expires_in": 3600
-			}`))
+			_, _ = w.Write(mockOAuthTokenResponse)
 		}))
 		defer mockOAuthServer.Close()
 

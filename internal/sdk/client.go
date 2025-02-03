@@ -11,6 +11,10 @@ import (
 	"net/http"
 )
 
+const (
+	DefaultAPIVersion = "v1"
+)
+
 func NewTasksClient(log Log, httpClient HttpClient, tokenStore *TokenStore, config Config) *TasksClient {
 	return &TasksClient{
 		log:        log,
@@ -50,7 +54,7 @@ func (tc *TasksClient) FetchByID(ctx context.Context, taskID string) (*Task, err
 	return task, nil
 }
 
-func (tc *TasksClient) Create(ctx context.Context, in *Task) (*Task, error) {
+func (tc *TasksClient) Create(ctx context.Context, in *CreateTaskRequest) (*Task, error) {
 	var data = new(bytes.Buffer)
 	if err := json.NewEncoder(data).Encode(&in); err != nil {
 		return nil, err
@@ -129,5 +133,5 @@ func (tc *TasksClient) DoWithAuth(ctx context.Context, req *http.Request) (*http
 }
 
 func (tc *TasksClient) getBaseAPIURL() string {
-	return fmt.Sprintf("%s/org/%s/project/%s", tc.config.RightbrainAPIHost, tc.config.RightbrainOrgID, tc.config.RightbrainProjectID)
+	return fmt.Sprintf("%s/api/%s/org/%s/project/%s", tc.config.RightbrainAPIHost, DefaultAPIVersion, tc.config.RightbrainOrgID, tc.config.RightbrainProjectID)
 }
