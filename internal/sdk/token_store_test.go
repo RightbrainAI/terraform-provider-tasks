@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"tasks-terraform-provider/internal/sdk"
+	"terraform-provider-tasks/internal/sdk"
 
 	"github.com/benbjohnson/clock"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +32,7 @@ func TestTokenStore(t *testing.T) {
 		defer mockOAuthServer.Close()
 
 		cl := clock.NewMock()
-		ts, err := sdk.NewTokenStore(cl, http.DefaultClient, mockOAuthServer.URL)
+		ts, err := sdk.NewTokenStore(sdk.NullLog{}, cl, http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
 
 		token, err := ts.Fetch(ctx, "", "")
@@ -58,7 +58,7 @@ func TestTokenStore(t *testing.T) {
 		defer mockOAuthServer.Close()
 
 		cl := clock.NewMock()
-		ts, err := sdk.NewTokenStore(cl, http.DefaultClient, mockOAuthServer.URL)
+		ts, err := sdk.NewTokenStore(sdk.NullLog{}, cl, http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
 
 		token, err := ts.Fetch(ctx, "", "")

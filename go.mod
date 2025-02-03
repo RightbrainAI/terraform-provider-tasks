@@ -1,4 +1,4 @@
-module tasks-terraform-provider
+module terraform-provider-tasks
 
 go 1.23.4
 

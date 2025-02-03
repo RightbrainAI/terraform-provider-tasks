@@ -4,7 +4,6 @@
 package sdk
 
 type Log interface {
-	With(args ...any) Log
 	Debug(msg string, args ...any)
 	Info(msg string, args ...any)
 	Warn(msg string, args ...any)
@@ -14,18 +13,7 @@ type Log interface {
 type NullLog struct {
 }
 
-func (nl NullLog) With(args ...any) Log {
-	return nil
-}
-func (nl NullLog) Debug(args ...any) Log {
-	return nil
-}
-func (nl NullLog) Info(args ...any) Log {
-	return nil
-}
-func (nl NullLog) Warn(args ...any) Log {
-	return nil
-}
-func (nl NullLog) Error(args ...any) Log {
-	return nil
-}
+func (nl NullLog) Debug(msg string, args ...any) {}
+func (nl NullLog) Info(msg string, args ...any)  {}
+func (nl NullLog) Warn(msg string, args ...any)  {}
+func (nl NullLog) Error(msg string, args ...any) {}

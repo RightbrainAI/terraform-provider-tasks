@@ -6,9 +6,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
-	"tasks-terraform-provider/internal/sdk"
+	"terraform-provider-tasks/internal/sdk"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -47,7 +48,7 @@ type RightbrainProviderModel struct {
 }
 
 func (p *RightbrainProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "rightbrain"
+	resp.TypeName = ProviderName
 	resp.Version = p.version
 }
 
@@ -124,16 +125,16 @@ func New(version string) func() provider.Provider {
 }
 
 func (p *RightbrainProvider) newRightbrainClient(data RightbrainProviderModel) (*sdk.TasksClient, error) {
-	oauthURL := fmt.Sprintf("%s/oauth2/token", data.RightbrainOAuthHost)
+	oauthURL := fmt.Sprintf("%s/oauth2/token", data.RightbrainOAuthHost.ValueString())
 	tokenStore, err := sdk.NewDefaultTokenStore(oauthURL)
 	if err != nil {
 		return nil, err
 	}
-	return sdk.NewTasksClient(http.DefaultClient, tokenStore, sdk.Config{
-		RightbrainAPIHost:      data.RightbrainAPIHost.String(),
-		RightbrainClientID:     data.RightbrainClientID.String(),
-		RightbrainClientSecret: data.RightbrainClientSecret.String(),
-		RightbrainOrgID:        data.RightbrainOrgID.String(),
-		RightbrainProjectID:    data.RightbrainProjectID.String(),
+	return sdk.NewTasksClient(slog.Default(), http.DefaultClient, tokenStore, sdk.Config{
+		RightbrainAPIHost:      data.RightbrainAPIHost.ValueString(),
+		RightbrainClientID:     data.RightbrainClientID.ValueString(),
+		RightbrainClientSecret: data.RightbrainClientSecret.ValueString(),
+		RightbrainOrgID:        data.RightbrainOrgID.ValueString(),
+		RightbrainProjectID:    data.RightbrainProjectID.ValueString(),
 	}), nil
 }

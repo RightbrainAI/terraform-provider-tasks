@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"tasks-terraform-provider/internal/sdk"
+	"terraform-provider-tasks/internal/sdk"
 
 	"github.com/benbjohnson/clock"
 	"github.com/stretchr/testify/assert"
@@ -39,9 +39,9 @@ func TestTasksClient(t *testing.T) {
 		}))
 		defer mockAPIServer.Close()
 
-		ts, err := sdk.NewTokenStore(clock.New(), http.DefaultClient, mockOAuthServer.URL)
+		ts, err := sdk.NewTokenStore(sdk.NullLog{}, clock.New(), http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
-		tc := sdk.NewTasksClient(http.DefaultClient, ts, sdk.Config{
+		tc := sdk.NewTasksClient(sdk.NullLog{}, http.DefaultClient, ts, sdk.Config{
 			RightbrainAPIHost:   mockAPIServer.URL,
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
@@ -70,9 +70,9 @@ func TestTasksClient(t *testing.T) {
 		}))
 		defer mockAPIServer.Close()
 
-		ts, err := sdk.NewTokenStore(clock.New(), http.DefaultClient, mockOAuthServer.URL)
+		ts, err := sdk.NewTokenStore(sdk.NullLog{}, clock.New(), http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
-		tc := sdk.NewTasksClient(http.DefaultClient, ts, sdk.Config{
+		tc := sdk.NewTasksClient(sdk.NullLog{}, http.DefaultClient, ts, sdk.Config{
 			RightbrainAPIHost:   mockAPIServer.URL,
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
@@ -101,9 +101,9 @@ func TestTasksClient(t *testing.T) {
 		}))
 		defer mockAPIServer.Close()
 
-		ts, err := sdk.NewTokenStore(clock.New(), http.DefaultClient, mockOAuthServer.URL)
+		ts, err := sdk.NewTokenStore(sdk.NullLog{}, clock.New(), http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
-		tc := sdk.NewTasksClient(http.DefaultClient, ts, sdk.Config{
+		tc := sdk.NewTasksClient(sdk.NullLog{}, http.DefaultClient, ts, sdk.Config{
 			RightbrainAPIHost:   mockAPIServer.URL,
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
@@ -134,9 +134,9 @@ func TestTasksClient(t *testing.T) {
 		}))
 		defer mockAPIServer.Close()
 
-		ts, err := sdk.NewTokenStore(clock.New(), http.DefaultClient, mockOAuthServer.URL)
+		ts, err := sdk.NewTokenStore(sdk.NullLog{}, clock.New(), http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
-		tc := sdk.NewTasksClient(http.DefaultClient, ts, sdk.Config{
+		tc := sdk.NewTasksClient(sdk.NullLog{}, http.DefaultClient, ts, sdk.Config{
 			RightbrainAPIHost:   mockAPIServer.URL,
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",

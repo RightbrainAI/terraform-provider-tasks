@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"sync"
@@ -21,6 +22,7 @@ type token struct {
 }
 
 type TokenStore struct {
+	log            Log
 	lock           sync.Mutex
 	clock          clock.Clock
 	token          *token
@@ -29,16 +31,17 @@ type TokenStore struct {
 }
 
 func NewDefaultTokenStore(tokenServerURL string) (*TokenStore, error) {
-	return NewTokenStore(clock.New(), http.DefaultClient, tokenServerURL)
+	return NewTokenStore(slog.Default().With("component", "TokenStore"), clock.New(), http.DefaultClient, tokenServerURL)
 }
 
-func NewTokenStore(clock clock.Clock, httpClient HttpClient, tokenServerURL string) (*TokenStore, error) {
+func NewTokenStore(log Log, clock clock.Clock, httpClient HttpClient, tokenServerURL string) (*TokenStore, error) {
 	tsu, err := url.Parse(tokenServerURL)
 	if err != nil {
 		return nil, err
 	}
 	return &TokenStore{
 		lock:           sync.Mutex{},
+		log:            log,
 		clock:          clock,
 		httpClient:     httpClient,
 		tokenServerURL: tsu,
@@ -59,13 +62,15 @@ func (ts *TokenStore) Fetch(ctx context.Context, clientID string, clientSecret s
 		return "", err
 	}
 
+	req.SetBasicAuth(clientID, clientSecret)
+
 	res, err := ts.httpClient.Do(req)
 	if err != nil {
 		return "", err
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("expected %d status code but got %d", http.StatusOK, res.StatusCode)
+		return "", fmt.Errorf("cannot fetch token, expected %d status code but got %d", http.StatusOK, res.StatusCode)
 	}
 
 	defer res.Body.Close()

@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"tasks-terraform-provider/internal/sdk"
+	"terraform-provider-tasks/internal/sdk"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -98,6 +98,12 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 	// For the purposes of this example code, hardcoding a response value to
 	// save into the Terraform state.
 	data.Id = types.StringValue("example-id")
+
+	_, err := r.client.Create(ctx, &sdk.Task{})
+	if err != nil {
+		resp.Diagnostics.AddError("cannot create task", err.Error())
+		return
+	}
 
 	// Write logs using the tflog package
 	// Documentation: https://terraform.io/plugin/log
