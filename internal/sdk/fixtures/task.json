@@ -9,7 +9,7 @@
       {
         "system_prompt": "You are an expert software program specifically designed for the fintech industry that will be used for pre-triage tasks to ensure the best possible client UX and efficient 3rd party platform interoperability.",
         "user_prompt": "Your task is to validate the uploaded image and determine whether it will be suitable for authentication and onboarding checks. If the image of the person is clear and typical of a passport style photo then set the compliance field to true. Provide rationale for your decision in the rationale field. If the compliance result is false, then provide a helpful hint for the customer who has submitted the photo informing them why it is unacceptable and some steps to remedy it, place this into the hint field. Determine whether the following description matches the provided image: {description}",
-        "llm_model": "gpt-4o",
+        "llm_model_id": "019010a2-8327-2607-11d7-41bb0a8936d3",
         "output_format": {
           "compliance": "bool",
           "hint": {

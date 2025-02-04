@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"terraform-provider-tasks/internal/sdk"
+	entitites "terraform-provider-tasks/internal/sdk/entities"
 
 	"github.com/benbjohnson/clock"
 	"github.com/stretchr/testify/assert"
@@ -22,12 +23,15 @@ func TestTasksClient(t *testing.T) {
 
 	ctx := context.Background()
 
+	mockOAuthTokenResponse := []byte(`{
+		"access_token": "dummy-access-token",
+		"expires_in": 3599
+	}`)
+
 	t.Run("test that it sends auth header", func(t *testing.T) {
 		mockOAuthServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write([]byte(`{
-				"access_token": "dummy-access-token",
-				"expires_in": 3600
-			}`))
+			_, err := w.Write(mockOAuthTokenResponse)
+			assert.NoError(t, err)
 		}))
 		defer mockOAuthServer.Close()
 
@@ -56,10 +60,8 @@ func TestTasksClient(t *testing.T) {
 
 		mockOAuthServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			calls++
-			_, _ = w.Write([]byte(`{
-				"access_token": "dummy-access-token",
-				"expires_in": 3600
-			}`))
+			_, err := w.Write(mockOAuthTokenResponse)
+			assert.NoError(t, err)
 		}))
 		defer mockOAuthServer.Close()
 
@@ -85,10 +87,8 @@ func TestTasksClient(t *testing.T) {
 
 	t.Run("test that it sends a create request", func(t *testing.T) {
 		mockOAuthServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write([]byte(`{
-				"access_token": "dummy-access-token",
-				"expires_in": 3600
-			}`))
+			_, err := w.Write(mockOAuthTokenResponse)
+			assert.NoError(t, err)
 		}))
 		defer mockOAuthServer.Close()
 
@@ -118,10 +118,8 @@ func TestTasksClient(t *testing.T) {
 
 	t.Run("test that it sends an update request", func(t *testing.T) {
 		mockOAuthServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write([]byte(`{
-				"access_token": "dummy-access-token",
-				"expires_in": 3600
-			}`))
+			_, err := w.Write(mockOAuthTokenResponse)
+			assert.NoError(t, err)
 		}))
 		defer mockOAuthServer.Close()
 
@@ -141,7 +139,7 @@ func TestTasksClient(t *testing.T) {
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
 		})
-		in := &sdk.Task{
+		in := &entitites.Task{
 			ID:          "019011e6-e530-3aca-6cf7-2973387c255d",
 			Description: "A task to pre-triage user onboarding before IDV.",
 		}

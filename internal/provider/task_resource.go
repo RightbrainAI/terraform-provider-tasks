@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -33,7 +32,17 @@ type TaskResource struct {
 
 // TaskResourceModel describes the resource data model.
 type TaskResourceModel struct {
-	Id types.String `tfsdk:"id"`
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Enabled     types.Bool   `tfsdk:"enabled"`
+	Public      types.Bool   `tfsdk:"public"`
+	Description types.String `tfsdk:"description"`
+
+	SystemPrompt  types.String            `tfsdk:"system_prompt"`
+	UserPrompt    types.String            `tfsdk:"user_prompt"`
+	LLMModelID    types.String            `tfsdk:"llm_model_id"`
+	ImageRequired types.Bool              `tfsdk:"image_required"`
+	OutputFormat  map[string]types.String `tfsdk:"output_format"`
 }
 
 func (r *TaskResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -52,6 +61,44 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"name": schema.StringAttribute{
+				Required:    true,
+				Description: "A name or reference for the Task.",
+			},
+			"description": schema.StringAttribute{
+				Optional:    true,
+				Description: "A description of the Task.",
+			},
+			"enabled": schema.BoolAttribute{
+				Required:    true,
+				Description: "When `true` the Task is active and callable.",
+			},
+			"public": schema.BoolAttribute{
+				Optional:    true,
+				Description: "",
+			},
+
+			// revision specific
+			"system_prompt": schema.StringAttribute{
+				Required:    true,
+				Description: "The system prompt that is used to set the LLM context.",
+			},
+			"user_prompt": schema.StringAttribute{
+				Required:    true,
+				Description: "The user prompt that is used to set the LLM context.",
+			},
+			"llm_model_id": schema.StringAttribute{
+				Required:    true,
+				Description: "The ID of the LLM model to use for the Task.",
+			},
+			"image_required": schema.BoolAttribute{
+				Optional:    true,
+				Description: "",
+			},
+			"output_format": schema.MapAttribute{
+				Required:    true,
+				ElementType: types.StringType,
 			},
 		},
 	}
@@ -87,27 +134,26 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// httpResp, err := r.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create example, got error: %s", err))
-	//     return
-	// }
+	in := sdk.NewCreateTaskRequest()
+	in.Name = data.Name.ValueString()
+	in.Description = data.Description.ValueString()
+	in.LLMModelID = data.LLMModelID.ValueString()
+	in.SystemPrompt = data.SystemPrompt.ValueString()
+	in.UserPrompt = data.UserPrompt.ValueString()
 
-	// For the purposes of this example code, hardcoding a response value to
-	// save into the Terraform state.
-	data.Id = types.StringValue("example-id")
+	for k, v := range data.OutputFormat {
+		in.OutputFormat[k] = v.ValueString()
+	}
 
-	_, err := r.client.Create(ctx, &sdk.Task{})
+	task, err := r.client.Create(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError("cannot create task", err.Error())
+		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
 
-	// Write logs using the tflog package
-	// Documentation: https://terraform.io/plugin/log
-	tflog.Trace(ctx, "created a resource")
+	data.ID = types.StringValue(task.ID)
+	data.Name = types.StringValue(task.Name)
+	data.Description = types.StringValue(task.Description)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

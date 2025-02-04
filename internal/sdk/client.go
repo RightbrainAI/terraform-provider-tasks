@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	entitites "terraform-provider-tasks/internal/sdk/entities"
 )
 
 const (
@@ -31,30 +32,35 @@ type TasksClient struct {
 	config     Config
 }
 
-func (tc *TasksClient) FetchByID(ctx context.Context, taskID string) (*Task, error) {
+func (tc *TasksClient) FetchByID(ctx context.Context, taskID string) (*entitites.Task, error) {
 	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), taskID)
 	tc.log.Error("fetching task", "id", taskID, "url", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
+		tc.log.Error(err.Error())
 		return nil, err
 	}
 	res, err := tc.DoWithAuth(ctx, req)
 	if err != nil {
+		tc.log.Error(err.Error())
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("cannot fetch task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+		err := fmt.Errorf("cannot fetch task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+		tc.log.Error(err.Error())
+		return nil, err
 	}
-	task := new(Task)
+	task := new(entitites.Task)
 
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
+		tc.log.Error(err.Error())
 		return nil, err
 	}
 
 	return task, nil
 }
 
-func (tc *TasksClient) Create(ctx context.Context, in *CreateTaskRequest) (*Task, error) {
+func (tc *TasksClient) Create(ctx context.Context, in *CreateTaskRequest) (*entitites.Task, error) {
 	var data = new(bytes.Buffer)
 	if err := json.NewEncoder(data).Encode(&in); err != nil {
 		return nil, err
@@ -63,23 +69,28 @@ func (tc *TasksClient) Create(ctx context.Context, in *CreateTaskRequest) (*Task
 	tc.log.Info("creating task", "url", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, data)
 	if err != nil {
+		tc.log.Error(err.Error())
 		return nil, err
 	}
 	res, err := tc.DoWithAuth(ctx, req)
 	if err != nil {
+		tc.log.Error(err.Error())
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("cannot create task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+		err := fmt.Errorf("cannot create task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+		tc.log.Error(err.Error())
+		return nil, err
 	}
-	task := new(Task)
+	task := new(entitites.Task)
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
+		tc.log.Error(err.Error())
 		return nil, err
 	}
 	return task, nil
 }
 
-func (tc *TasksClient) Update(ctx context.Context, in *Task) (*Task, error) {
+func (tc *TasksClient) Update(ctx context.Context, in *entitites.Task) (*entitites.Task, error) {
 	var data = new(bytes.Buffer)
 	if err := json.NewEncoder(data).Encode(&in); err != nil {
 		return nil, err
@@ -98,7 +109,7 @@ func (tc *TasksClient) Update(ctx context.Context, in *Task) (*Task, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("cannot update task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
 	}
-	task := new(Task)
+	task := new(entitites.Task)
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
 		return nil, err
 	}
@@ -121,6 +132,31 @@ func (tc *TasksClient) DeleteByID(ctx context.Context, taskID string) error {
 		return fmt.Errorf("cannot delete task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
 	}
 	return nil
+}
+
+func (tc *TasksClient) GetAvailableLLMModels(ctx context.Context) ([]entitites.Model, error) {
+	url := fmt.Sprintf("%s/model", tc.getBaseAPIURL())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := tc.DoWithAuth(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("cannot list models, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+	}
+
+	defer res.Body.Close()
+
+	var models []entitites.Model
+
+	if err := json.NewDecoder(res.Body).Decode(&models); err != nil {
+		return nil, err
+	}
+
+	return models, nil
 }
 
 func (tc *TasksClient) DoWithAuth(ctx context.Context, req *http.Request) (*http.Response, error) {

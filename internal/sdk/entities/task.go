@@ -1,9 +1,9 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package sdk
+package entitites
 
-import "time"
+import "fmt"
 
 // Root represents the overall response structure.
 type Task struct {
@@ -11,22 +11,27 @@ type Task struct {
 	Enabled     bool       `json:"enabled"`
 	ID          string     `json:"id"`
 	ProjectID   string     `json:"project_id"`
-	Created     time.Time  `json:"created"`
-	Modified    time.Time  `json:"modified"`
 	Revisions   []Revision `json:"revisions"`
 	Description string     `json:"description"`
 	AccessToken string     `json:"access_token"`
+}
+
+func (t *Task) GetActiveRevision() (*Revision, error) {
+	for _, r := range t.Revisions {
+		if r.Active {
+			return &r, nil
+		}
+	}
+	return nil, fmt.Errorf("could not find active revision for task")
 }
 
 // Revision represents a single revision in the "revisions" array.
 type Revision struct {
 	SystemPrompt    string       `json:"system_prompt"`
 	UserPrompt      string       `json:"user_prompt"`
-	LLMModel        string       `json:"llm_model"`
+	LLMModelID      string       `json:"llm_model_id"`
 	OutputFormat    OutputFormat `json:"output_format"`
 	ID              string       `json:"id"`
-	Created         time.Time    `json:"created"`
-	Modified        time.Time    `json:"modified"`
 	InputParams     []string     `json:"input_params"`
 	TaskForwarderID string       `json:"task_forwarder_id"`
 	ImageRequired   bool         `json:"image_required"`
@@ -39,7 +44,7 @@ type OutputFormat struct {
 	Compliance  string `json:"compliance"`
 	Hint        Hint   `json:"hint"`
 	Match       Match  `json:"match"`
-	Description bool   `json:"description"`
+	Description string `json:"description"`
 	Rationale   string `json:"rationale"`
 }
 

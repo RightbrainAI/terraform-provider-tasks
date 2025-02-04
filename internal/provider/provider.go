@@ -109,7 +109,9 @@ func (p *RightbrainProvider) EphemeralResources(ctx context.Context) []func() ep
 }
 
 func (p *RightbrainProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		NewLLMModelDataSource,
+	}
 }
 
 func (p *RightbrainProvider) Functions(ctx context.Context) []func() function.Function {
