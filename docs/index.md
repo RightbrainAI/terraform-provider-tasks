@@ -17,9 +17,12 @@ description: |-
 
 ### Required
 
-- `api_host` (String) The hostname for the Rightbrain API server
 - `client_id` (String) The OAuth Client ID
 - `client_secret` (String) The OAuth Client Secret
-- `oauth_host` (String) The hostname for the Rightbrain OAuth server
 - `org_id` (String) The Org ID
 - `project_id` (String) The Project ID
+
+### Optional
+
+- `api_host` (String) The hostname for the Rightbrain API server
+- `oauth_host` (String) The hostname for the Rightbrain OAuth server

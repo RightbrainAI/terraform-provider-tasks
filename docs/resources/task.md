@@ -32,4 +32,5 @@ Task resource
 
 ### Read-Only
 
+- `active_revision_id` (String)
 - `id` (String) Identifier
