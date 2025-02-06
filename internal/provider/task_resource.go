@@ -43,6 +43,8 @@ type TaskResourceModel struct {
 	LLMModelID    types.String            `tfsdk:"llm_model_id"`
 	ImageRequired types.Bool              `tfsdk:"image_required"`
 	OutputFormat  map[string]types.String `tfsdk:"output_format"`
+
+	ActiveRevisionID types.String `tfsdk:"active_revision_id"`
 }
 
 func (r *TaskResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -77,6 +79,9 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"public": schema.BoolAttribute{
 				Optional:    true,
 				Description: "",
+			},
+			"active_revision_id": schema.StringAttribute{
+				Computed: true,
 			},
 
 			// revision specific
@@ -151,9 +156,16 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	rev, err := task.GetActiveRevision()
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
+		return
+	}
+
 	data.ID = types.StringValue(task.ID)
 	data.Name = types.StringValue(task.Name)
 	data.Description = types.StringValue(task.Description)
+	data.ActiveRevisionID = types.StringValue(rev.ID)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -191,13 +203,33 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// httpResp, err := r.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update example, got error: %s", err))
-	//     return
-	// }
+	in := sdk.NewUpdateTaskRequest(data.ID.ValueString())
+	in.Name = data.Name.ValueString()
+	in.Description = data.Description.ValueString()
+	in.LLMModelID = data.LLMModelID.ValueString()
+	in.SystemPrompt = data.SystemPrompt.ValueString()
+	in.UserPrompt = data.UserPrompt.ValueString()
+
+	for k, v := range data.OutputFormat {
+		in.OutputFormat[k] = v.ValueString()
+	}
+
+	task, err := r.client.Update(ctx, in)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
+		return
+	}
+
+	rev, err := task.GetActiveRevision()
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
+		return
+	}
+
+	data.ID = types.StringValue(task.ID)
+	data.Name = types.StringValue(task.Name)
+	data.Description = types.StringValue(task.Description)
+	data.ActiveRevisionID = types.StringValue(rev.ID)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -213,13 +245,11 @@ func (r *TaskResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// httpResp, err := r.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete example, got error: %s", err))
-	//     return
-	// }
+	err := r.client.Delete(ctx, sdk.NewDeleteTaskRequest(data.ID.ValueString()))
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
+		return
+	}
 }
 
 func (r *TaskResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

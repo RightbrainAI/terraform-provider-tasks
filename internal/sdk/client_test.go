@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"terraform-provider-tasks/internal/sdk"
-	entitites "terraform-provider-tasks/internal/sdk/entities"
 
 	"github.com/benbjohnson/clock"
 	"github.com/stretchr/testify/assert"
@@ -50,7 +49,7 @@ func TestTasksClient(t *testing.T) {
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
 		})
-		_, err = tc.FetchByID(ctx, "019011e6-e530-3aca-6cf7-2973387c255d")
+		_, err = tc.Fetch(ctx, sdk.NewFetchTaskRequest("019011e6-e530-3aca-6cf7-2973387c255d"))
 		assert.NoError(t, err)
 	})
 
@@ -79,7 +78,7 @@ func TestTasksClient(t *testing.T) {
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
 		})
-		task, err := tc.FetchByID(ctx, "019011e6-e530-3aca-6cf7-2973387c255d")
+		task, err := tc.Fetch(ctx, sdk.NewFetchTaskRequest("019011e6-e530-3aca-6cf7-2973387c255d"))
 		assert.NoError(t, err)
 		assert.Equal(t, 1, calls)
 		assert.Equal(t, "019011e6-e530-3aca-6cf7-2973387c255d", task.ID)
@@ -108,7 +107,7 @@ func TestTasksClient(t *testing.T) {
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
 		})
-		in := &sdk.CreateTaskRequest{
+		in := sdk.CreateTaskRequest{
 			Description: "A task to pre-triage user onboarding before IDV.",
 		}
 		task, err := tc.Create(ctx, in)
@@ -139,7 +138,7 @@ func TestTasksClient(t *testing.T) {
 			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
 			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
 		})
-		in := &entitites.Task{
+		in := sdk.UpdateTaskRequest{
 			ID:          "019011e6-e530-3aca-6cf7-2973387c255d",
 			Description: "A task to pre-triage user onboarding before IDV.",
 		}

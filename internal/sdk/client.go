@@ -32,9 +32,9 @@ type TasksClient struct {
 	config     Config
 }
 
-func (tc *TasksClient) FetchByID(ctx context.Context, taskID string) (*entitites.Task, error) {
-	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), taskID)
-	tc.log.Error("fetching task", "id", taskID, "url", url)
+func (tc *TasksClient) Fetch(ctx context.Context, in FetchTaskRequest) (*entitites.Task, error) {
+	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), in.ID)
+	tc.log.Error("fetching task", "id", in.ID, "url", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		tc.log.Error(err.Error())
@@ -60,7 +60,7 @@ func (tc *TasksClient) FetchByID(ctx context.Context, taskID string) (*entitites
 	return task, nil
 }
 
-func (tc *TasksClient) Create(ctx context.Context, in *CreateTaskRequest) (*entitites.Task, error) {
+func (tc *TasksClient) Create(ctx context.Context, in CreateTaskRequest) (*entitites.Task, error) {
 	var data = new(bytes.Buffer)
 	if err := json.NewEncoder(data).Encode(&in); err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (tc *TasksClient) Create(ctx context.Context, in *CreateTaskRequest) (*enti
 	return task, nil
 }
 
-func (tc *TasksClient) Update(ctx context.Context, in *entitites.Task) (*entitites.Task, error) {
+func (tc *TasksClient) Update(ctx context.Context, in UpdateTaskRequest) (*entitites.Task, error) {
 	var data = new(bytes.Buffer)
 	if err := json.NewEncoder(data).Encode(&in); err != nil {
 		return nil, err
@@ -116,9 +116,9 @@ func (tc *TasksClient) Update(ctx context.Context, in *entitites.Task) (*entitit
 	return task, nil
 }
 
-func (tc *TasksClient) DeleteByID(ctx context.Context, taskID string) error {
-	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), taskID)
-	tc.log.Info("deleting task", "id", taskID, "url", url)
+func (tc *TasksClient) Delete(ctx context.Context, in DeleteTaskRequest) error {
+	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), in.ID)
+	tc.log.Info("deleting task", "id", in.ID, "url", url)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 	if err != nil {

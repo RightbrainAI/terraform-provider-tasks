@@ -26,7 +26,9 @@ var _ provider.ProviderWithFunctions = &RightbrainProvider{}
 var _ provider.ProviderWithEphemeralResources = &RightbrainProvider{}
 
 const (
-	ProviderName = "rightbrain"
+	ProviderName     = "rightbrain"
+	DefaultOAuthHost = "https://oauth.rightbrain.ai"
+	DefaultAPIHost   = "https://app.rightbrain.ai"
 )
 
 // RightbrainProvider defines the provider implementation.
@@ -57,11 +59,11 @@ func (p *RightbrainProvider) Schema(ctx context.Context, req provider.SchemaRequ
 		Attributes: map[string]schema.Attribute{
 			"api_host": schema.StringAttribute{
 				MarkdownDescription: "The hostname for the Rightbrain API server",
-				Required:            true,
+				Optional:            true,
 			},
 			"oauth_host": schema.StringAttribute{
 				MarkdownDescription: "The hostname for the Rightbrain OAuth server",
-				Required:            true,
+				Optional:            true,
 			},
 			"client_id": schema.StringAttribute{
 				MarkdownDescription: "The OAuth Client ID",
@@ -127,16 +129,23 @@ func New(version string) func() provider.Provider {
 }
 
 func (p *RightbrainProvider) newRightbrainClient(data RightbrainProviderModel) (*sdk.TasksClient, error) {
-	oauthURL := fmt.Sprintf("%s/oauth2/token", data.RightbrainOAuthHost.ValueString())
+	oauthURL := fmt.Sprintf("%s/oauth2/token", p.isEmptyValueElseDefault(data.RightbrainOAuthHost, DefaultOAuthHost))
 	tokenStore, err := sdk.NewDefaultTokenStore(oauthURL)
 	if err != nil {
 		return nil, err
 	}
 	return sdk.NewTasksClient(slog.Default(), http.DefaultClient, tokenStore, sdk.Config{
-		RightbrainAPIHost:      data.RightbrainAPIHost.ValueString(),
+		RightbrainAPIHost:      p.isEmptyValueElseDefault(data.RightbrainAPIHost, DefaultAPIHost),
 		RightbrainClientID:     data.RightbrainClientID.ValueString(),
 		RightbrainClientSecret: data.RightbrainClientSecret.ValueString(),
 		RightbrainOrgID:        data.RightbrainOrgID.ValueString(),
 		RightbrainProjectID:    data.RightbrainProjectID.ValueString(),
 	}), nil
+}
+
+func (p *RightbrainProvider) isEmptyValueElseDefault(field types.String, defaultValue string) string {
+	if field.IsNull() {
+		return defaultValue
+	}
+	return field.ValueString()
 }
