@@ -181,15 +181,26 @@ func (r *TaskResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	// If applicable, this is a great opportunity to initialize any necessary
-	// provider client data and make a call using it.
-	// httpResp, err := r.client.Do(httpReq)
-	// if err != nil {
-	//     resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read example, got error: %s", err))
-	//     return
-	// }
+	task, err := r.client.Fetch(ctx, sdk.NewFetchTaskRequest(data.ID.ValueString()))
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
+		return
+	}
 
-	// Save updated data into Terraform state
+	rev, err := task.GetActiveRevision()
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
+		return
+	}
+
+	data.ID = types.StringValue(task.ID)
+	data.Name = types.StringValue(task.Name)
+	data.Description = types.StringValue(task.Description)
+	data.ActiveRevisionID = types.StringValue(rev.ID)
+	data.LLMModelID = types.StringValue(rev.LLMModelID)
+	data.SystemPrompt = types.StringValue(rev.SystemPrompt)
+	data.UserPrompt = types.StringValue(rev.UserPrompt)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -230,6 +241,9 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	data.Name = types.StringValue(task.Name)
 	data.Description = types.StringValue(task.Description)
 	data.ActiveRevisionID = types.StringValue(rev.ID)
+	data.LLMModelID = types.StringValue(rev.LLMModelID)
+	data.SystemPrompt = types.StringValue(rev.SystemPrompt)
+	data.UserPrompt = types.StringValue(rev.UserPrompt)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
