@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"terraform-provider-tasks/internal/sdk"
+	entitites "terraform-provider-tasks/internal/sdk/entities"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -45,6 +46,24 @@ type TaskResourceModel struct {
 	OutputFormat  map[string]types.String `tfsdk:"output_format"`
 
 	ActiveRevisionID types.String `tfsdk:"active_revision_id"`
+}
+
+func (trm *TaskResourceModel) PopulateFromTaskModel(task *entitites.Task) error {
+
+	rev, err := task.GetActiveRevision()
+	if err != nil {
+		return err
+	}
+
+	trm.ID = types.StringValue(task.ID)
+	trm.Name = types.StringValue(task.Name)
+	trm.Description = types.StringValue(task.Description)
+	trm.ActiveRevisionID = types.StringValue(rev.ID)
+	trm.LLMModelID = types.StringValue(rev.LLMModelID)
+	trm.SystemPrompt = types.StringValue(rev.SystemPrompt)
+	trm.UserPrompt = types.StringValue(rev.UserPrompt)
+
+	return nil
 }
 
 func (r *TaskResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -156,16 +175,10 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	rev, err := task.GetActiveRevision()
-	if err != nil {
+	if err := data.PopulateFromTaskModel(task); err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
-
-	data.ID = types.StringValue(task.ID)
-	data.Name = types.StringValue(task.Name)
-	data.Description = types.StringValue(task.Description)
-	data.ActiveRevisionID = types.StringValue(rev.ID)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -187,19 +200,10 @@ func (r *TaskResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	rev, err := task.GetActiveRevision()
-	if err != nil {
+	if err := data.PopulateFromTaskModel(task); err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
-
-	data.ID = types.StringValue(task.ID)
-	data.Name = types.StringValue(task.Name)
-	data.Description = types.StringValue(task.Description)
-	data.ActiveRevisionID = types.StringValue(rev.ID)
-	data.LLMModelID = types.StringValue(rev.LLMModelID)
-	data.SystemPrompt = types.StringValue(rev.SystemPrompt)
-	data.UserPrompt = types.StringValue(rev.UserPrompt)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -231,19 +235,10 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	rev, err := task.GetActiveRevision()
-	if err != nil {
+	if err := data.PopulateFromTaskModel(task); err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
-
-	data.ID = types.StringValue(task.ID)
-	data.Name = types.StringValue(task.Name)
-	data.Description = types.StringValue(task.Description)
-	data.ActiveRevisionID = types.StringValue(rev.ID)
-	data.LLMModelID = types.StringValue(rev.LLMModelID)
-	data.SystemPrompt = types.StringValue(rev.SystemPrompt)
-	data.UserPrompt = types.StringValue(rev.UserPrompt)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
