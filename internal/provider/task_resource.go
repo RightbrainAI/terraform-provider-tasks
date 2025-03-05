@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -56,14 +57,17 @@ func (trm *TaskResourceModel) PopulateFromTaskModel(task *entitites.Task) error 
 	}
 
 	trm.ID = types.StringValue(task.ID)
+	trm.Name = types.StringValue(task.Name)
 	trm.Enabled = types.BoolValue(task.Enabled)
 	trm.Public = types.BoolValue(task.Public)
-	trm.Name = types.StringValue(task.Name)
 	trm.Description = types.StringValue(task.Description)
-	trm.ActiveRevisionID = types.StringValue(rev.ID)
-	trm.LLMModelID = types.StringValue(rev.LLMModelID)
+
 	trm.SystemPrompt = types.StringValue(rev.SystemPrompt)
 	trm.UserPrompt = types.StringValue(rev.UserPrompt)
+	trm.LLMModelID = types.StringValue(rev.LLMModelID)
+	trm.ImageRequired = types.BoolValue(rev.ImageRequired)
+
+	trm.ActiveRevisionID = types.StringValue(rev.ID)
 
 	return nil
 }
@@ -100,6 +104,8 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"public": schema.BoolAttribute{
 				Optional:    true,
 				Description: "",
+				Default:     booldefault.StaticBool(false),
+				Computed:    true,
 			},
 			"active_revision_id": schema.StringAttribute{
 				Computed: true,
@@ -121,6 +127,8 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"image_required": schema.BoolAttribute{
 				Optional:    true,
 				Description: "",
+				Default:     booldefault.StaticBool(false),
+				Computed:    true,
 			},
 			"output_format": schema.MapAttribute{
 				Required:    true,
@@ -166,6 +174,9 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 	in.LLMModelID = data.LLMModelID.ValueString()
 	in.SystemPrompt = data.SystemPrompt.ValueString()
 	in.UserPrompt = data.UserPrompt.ValueString()
+	in.Enabled = data.Enabled.ValueBool()
+	in.Public = data.Public.ValueBool()
+	in.ImageRequired = data.ImageRequired.ValueBool()
 
 	for k, v := range data.OutputFormat {
 		in.OutputFormat[k] = v.ValueString()
@@ -226,6 +237,9 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	in.LLMModelID = data.LLMModelID.ValueString()
 	in.SystemPrompt = data.SystemPrompt.ValueString()
 	in.UserPrompt = data.UserPrompt.ValueString()
+	in.Enabled = data.Enabled.ValueBool()
+	in.Public = data.Public.ValueBool()
+	in.ImageRequired = data.ImageRequired.ValueBool()
 
 	for k, v := range data.OutputFormat {
 		in.OutputFormat[k] = v.ValueString()
