@@ -56,6 +56,8 @@ func (trm *TaskResourceModel) PopulateFromTaskModel(task *entitites.Task) error 
 	}
 
 	trm.ID = types.StringValue(task.ID)
+	trm.Enabled = types.BoolValue(task.Enabled)
+	trm.Public = types.BoolValue(task.Public)
 	trm.Name = types.StringValue(task.Name)
 	trm.Description = types.StringValue(task.Description)
 	trm.ActiveRevisionID = types.StringValue(rev.ID)
