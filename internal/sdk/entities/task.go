@@ -9,6 +9,7 @@ import "fmt"
 type Task struct {
 	Name        string     `json:"name"`
 	Enabled     bool       `json:"enabled"`
+	Public      bool       `json:"public"`
 	ID          string     `json:"id"`
 	ProjectID   string     `json:"project_id"`
 	Revisions   []Revision `json:"revisions"`
