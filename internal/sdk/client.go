@@ -34,7 +34,7 @@ type TasksClient struct {
 
 func (tc *TasksClient) Fetch(ctx context.Context, in FetchTaskRequest) (*entitites.Task, error) {
 	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), in.ID)
-	tc.log.Error("fetching task", "id", in.ID, "url", url)
+	tc.log.Info("fetching task", "id", in.ID, "url", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		tc.log.Error(err.Error())
@@ -113,7 +113,10 @@ func (tc *TasksClient) Update(ctx context.Context, in UpdateTaskRequest) (*entit
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
 		return nil, err
 	}
-	return task, nil
+	if err := tc.markLatestTaskRevisionAsActive(ctx, task); err != nil {
+		return nil, err
+	}
+	return tc.Fetch(ctx, NewFetchTaskRequest(in.ID))
 }
 
 func (tc *TasksClient) Delete(ctx context.Context, in DeleteTaskRequest) error {
@@ -170,4 +173,37 @@ func (tc *TasksClient) DoWithAuth(ctx context.Context, req *http.Request) (*http
 
 func (tc *TasksClient) getBaseAPIURL() string {
 	return fmt.Sprintf("%s/api/%s/org/%s/project/%s", tc.config.RightbrainAPIHost, DefaultAPIVersion, tc.config.RightbrainOrgID, tc.config.RightbrainProjectID)
+}
+
+func (tc *TasksClient) markLatestTaskRevisionAsActive(ctx context.Context, task *entitites.Task) error {
+	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), task.ID)
+	tc.log.Info("updating task", "id", task.ID, "url", url)
+
+	rev, err := task.GetLatestRevision()
+	if err != nil {
+		return err
+	}
+
+	data := fmt.Sprintf(`{
+		"active_revisions": [
+			{
+				"weight": 1,
+				"task_revision_id": %q
+			}
+		]
+	}`, rev.ID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader([]byte(data)))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := tc.DoWithAuth(ctx, req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("cannot update task revision, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+	}
+	return nil
 }

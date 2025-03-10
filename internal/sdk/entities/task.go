@@ -26,6 +26,13 @@ func (t *Task) GetActiveRevision() (*Revision, error) {
 	return nil, fmt.Errorf("could not find active revision for task")
 }
 
+func (t *Task) GetLatestRevision() (*Revision, error) {
+	if len(t.Revisions) == 0 {
+		return nil, fmt.Errorf("could not find latest revision for task")
+	}
+	return &t.Revisions[0], nil
+}
+
 // Revision represents a single revision in the "revisions" array.
 type Revision struct {
 	SystemPrompt    string       `json:"system_prompt"`
