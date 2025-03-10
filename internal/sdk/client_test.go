@@ -123,11 +123,18 @@ func TestTasksClient(t *testing.T) {
 		defer mockOAuthServer.Close()
 
 		mockAPIServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "Bearer dummy-access-token", r.Header.Get("Authorization"))
-			assert.True(t, strings.HasSuffix(r.RequestURI, "/org/00000001-00000000-00000000-00000000/project/019010a2-8327-2607-11d7-41bb0a8936d4/task/019011e6-e530-3aca-6cf7-2973387c255d"))
-			data := getTestFixture(t, "task.json")
-			_, _ = w.Write(data)
+			if r.Method == http.MethodPost {
+				assert.Equal(t, "Bearer dummy-access-token", r.Header.Get("Authorization"))
+				assert.True(t, strings.HasSuffix(r.RequestURI, "/org/00000001-00000000-00000000-00000000/project/019010a2-8327-2607-11d7-41bb0a8936d4/task/019011e6-e530-3aca-6cf7-2973387c255d"))
+				data := getTestFixture(t, "task.json")
+				_, _ = w.Write(data)
+				return
+			}
+			if r.Method == http.MethodGet {
+				data := getTestFixture(t, "task.json")
+				_, _ = w.Write(data)
+				return
+			}
 		}))
 		defer mockAPIServer.Close()
 
