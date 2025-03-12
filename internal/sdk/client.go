@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	entitites "terraform-provider-tasks/internal/sdk/entities"
@@ -212,7 +213,7 @@ func (tc *TasksClient) markLatestTaskRevisionAsActive(ctx context.Context, task 
 	return nil
 }
 
-func (tc *TasksClient) assertStatusCode(prexix string, expected int, res *http.Response) error {
+func (tc *TasksClient) assertStatusCode(prexix string, expected int, res *http.Response) error { //nolint:unparam
 
 	if res.StatusCode == expected {
 		return nil
@@ -250,5 +251,5 @@ func (tc *TasksClient) assertStatusCode(prexix string, expected int, res *http.R
 		err = fmt.Sprintf("%s %s", err, message)
 	}
 
-	return fmt.Errorf(err)
+	return errors.New(err)
 }
