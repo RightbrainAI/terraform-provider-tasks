@@ -223,7 +223,7 @@ func (tc *TasksClient) assertStatusCode(prefix string, expected int, res *http.R
 
 	body, _ := io.ReadAll(res.Body)
 
-	tc.log.Debug("status code was not as expected", "expected", expected, "got", res.StatusCode, "body", string(body))
+	tc.log.Info("status code was not as expected", "expected", expected, "got", res.StatusCode, "body", string(body))
 
 	return fmt.Errorf("%s, expected status code %d but got %d.", prefix, expected, res.StatusCode)
 }
