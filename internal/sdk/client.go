@@ -45,11 +45,11 @@ func (tc *TasksClient) Fetch(ctx context.Context, in FetchTaskRequest) (*entitit
 		tc.log.Error(err.Error())
 		return nil, err
 	}
-	if res.StatusCode != http.StatusOK {
-		err := fmt.Errorf("cannot fetch task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+	if err := tc.assertStatusCode("cannot fetch task", http.StatusOK, res); err != nil {
 		tc.log.Error(err.Error())
 		return nil, err
 	}
+
 	task := new(entitites.Task)
 
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
@@ -77,8 +77,7 @@ func (tc *TasksClient) Create(ctx context.Context, in CreateTaskRequest) (*entit
 		tc.log.Error(err.Error())
 		return nil, err
 	}
-	if res.StatusCode != http.StatusOK {
-		err := fmt.Errorf("cannot create task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+	if err := tc.assertStatusCode("cannot create task", http.StatusOK, res); err != nil {
 		tc.log.Error(err.Error())
 		return nil, err
 	}
@@ -106,8 +105,9 @@ func (tc *TasksClient) Update(ctx context.Context, in UpdateTaskRequest) (*entit
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("cannot update task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+	if err := tc.assertStatusCode("cannot update task", http.StatusOK, res); err != nil {
+		tc.log.Error(err.Error())
+		return nil, err
 	}
 	task := new(entitites.Task)
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
@@ -131,8 +131,9 @@ func (tc *TasksClient) Delete(ctx context.Context, in DeleteTaskRequest) error {
 	if err != nil {
 		return err
 	}
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("cannot delete task, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+	if err := tc.assertStatusCode("cannot delete task", http.StatusOK, res); err != nil {
+		tc.log.Error(err.Error())
+		return err
 	}
 	return nil
 }
@@ -147,8 +148,10 @@ func (tc *TasksClient) GetAvailableLLMModels(ctx context.Context) ([]entitites.M
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("cannot list models, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+
+	if err := tc.assertStatusCode("cannot obtain model list", http.StatusOK, res); err != nil {
+		tc.log.Error(err.Error())
+		return nil, err
 	}
 
 	defer res.Body.Close()
@@ -202,8 +205,50 @@ func (tc *TasksClient) markLatestTaskRevisionAsActive(ctx context.Context, task 
 	if err != nil {
 		return err
 	}
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("cannot update task revision, expected status code %d, but got %d", http.StatusOK, res.StatusCode)
+	if err := tc.assertStatusCode("cannot make revision active", http.StatusOK, res); err != nil {
+		tc.log.Error(err.Error())
+		return err
 	}
 	return nil
+}
+
+func (tc *TasksClient) assertStatusCode(prexix string, expected int, res *http.Response) error {
+
+	if res.StatusCode == expected {
+		return nil
+	}
+
+	var message string
+
+	if res.StatusCode == http.StatusUnprocessableEntity {
+		data := struct {
+			Details []struct {
+				Message string `json:"message"`
+			} `json:"details"`
+		}{}
+		if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
+			return err
+		}
+		if len(data.Details) > 0 && data.Details[0].Message != "" {
+			message = data.Details[0].Message
+		}
+	} else {
+		data := struct {
+			Message string `json:"message"`
+		}{}
+		if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
+			return err
+		}
+		if data.Message != "" {
+			message = data.Message
+		}
+	}
+
+	err := fmt.Sprintf("%s, expected status code %d but got %d.", prexix, expected, res.StatusCode)
+
+	if message != "" {
+		err = fmt.Sprintf("%s %s", err, message)
+	}
+
+	return fmt.Errorf(err)
 }
