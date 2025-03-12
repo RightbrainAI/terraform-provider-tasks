@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	entitites "terraform-provider-tasks/internal/sdk/entities"
 )
@@ -112,9 +112,11 @@ func (tc *TasksClient) Update(ctx context.Context, in UpdateTaskRequest) (*entit
 	}
 	task := new(entitites.Task)
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
+		tc.log.Error(err.Error())
 		return nil, err
 	}
 	if err := tc.markLatestTaskRevisionAsActive(ctx, task); err != nil {
+		tc.log.Error(err.Error())
 		return nil, err
 	}
 	return tc.Fetch(ctx, NewFetchTaskRequest(in.ID))
@@ -213,43 +215,15 @@ func (tc *TasksClient) markLatestTaskRevisionAsActive(ctx context.Context, task 
 	return nil
 }
 
-func (tc *TasksClient) assertStatusCode(prexix string, expected int, res *http.Response) error { //nolint:unparam
+func (tc *TasksClient) assertStatusCode(prefix string, expected int, res *http.Response) error { //nolint:unparam
 
 	if res.StatusCode == expected {
 		return nil
 	}
 
-	var message string
+	body, _ := io.ReadAll(res.Body)
 
-	if res.StatusCode == http.StatusUnprocessableEntity {
-		data := struct {
-			Details []struct {
-				Message string `json:"message"`
-			} `json:"details"`
-		}{}
-		if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-			return err
-		}
-		if len(data.Details) > 0 && data.Details[0].Message != "" {
-			message = data.Details[0].Message
-		}
-	} else {
-		data := struct {
-			Message string `json:"message"`
-		}{}
-		if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-			return err
-		}
-		if data.Message != "" {
-			message = data.Message
-		}
-	}
+	tc.log.Debug("status code was not as expected", "expected", expected, "got", res.StatusCode, "body", string(body))
 
-	err := fmt.Sprintf("%s, expected status code %d but got %d.", prexix, expected, res.StatusCode)
-
-	if message != "" {
-		err = fmt.Sprintf("%s %s", err, message)
-	}
-
-	return errors.New(err)
+	return fmt.Errorf("%s, expected status code %d but got %d.", prefix, expected, res.StatusCode)
 }
