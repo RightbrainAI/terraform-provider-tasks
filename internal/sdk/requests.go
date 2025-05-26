@@ -3,16 +3,21 @@
 
 package sdk
 
+import (
+	entitites "terraform-provider-tasks/internal/sdk/entities"
+)
+
 type CreateTaskRequest struct {
-	Description   string            `json:"description"`
-	Enabled       bool              `json:"enabled"`
-	ImageRequired bool              `json:"image_required"`
-	LLMModelID    string            `json:"llm_model_id"`
-	Name          string            `json:"name"`
-	OutputFormat  map[string]string `json:"output_format"`
-	Public        bool              `json:"public"`
-	SystemPrompt  string            `json:"system_prompt"`
-	UserPrompt    string            `json:"user_prompt"`
+	Description     string                      `json:"description"`
+	Enabled         bool                        `json:"enabled"`
+	ImageRequired   bool                        `json:"image_required"`
+	InputProcessors *[]entitites.InputProcessor `json:"input_processors"`
+	LLMModelID      string                      `json:"llm_model_id"`
+	Name            string                      `json:"name"`
+	OutputFormat    map[string]string           `json:"output_format"`
+	Public          bool                        `json:"public"`
+	SystemPrompt    string                      `json:"system_prompt"`
+	UserPrompt      string                      `json:"user_prompt"`
 }
 
 func NewCreateTaskRequest() CreateTaskRequest {
@@ -22,16 +27,17 @@ func NewCreateTaskRequest() CreateTaskRequest {
 }
 
 type UpdateTaskRequest struct {
-	ID            string            `json:"id"`
-	Description   string            `json:"description"`
-	Enabled       bool              `json:"enabled"`
-	ImageRequired bool              `json:"image_required"`
-	LLMModelID    string            `json:"llm_model_id"`
-	Name          string            `json:"name"`
-	OutputFormat  map[string]string `json:"output_format"`
-	Public        bool              `json:"public"`
-	SystemPrompt  string            `json:"system_prompt"`
-	UserPrompt    string            `json:"user_prompt"`
+	ID              string                      `json:"id"`
+	Description     string                      `json:"description"`
+	Enabled         bool                        `json:"enabled"`
+	ImageRequired   bool                        `json:"image_required"`
+	InputProcessors *[]entitites.InputProcessor `json:"input_processors"`
+	LLMModelID      string                      `json:"llm_model_id"`
+	Name            string                      `json:"name"`
+	OutputFormat    map[string]string           `json:"output_format"`
+	Public          bool                        `json:"public"`
+	SystemPrompt    string                      `json:"system_prompt"`
+	UserPrompt      string                      `json:"user_prompt"`
 }
 
 func NewUpdateTaskRequest(id string) UpdateTaskRequest {

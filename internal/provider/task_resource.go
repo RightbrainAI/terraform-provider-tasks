@@ -32,6 +32,16 @@ type TaskResource struct {
 	client *sdk.TasksClient
 }
 
+type InputProcessorsModel struct {
+	InputProcessors []InputProcessorModel `tfsdk:"input_processor"`
+}
+
+type InputProcessorModel struct {
+	ParamName      types.String            `tfsdk:"param_name"`
+	InputProcessor types.String            `tfsdk:"input_processor"`
+	Config         map[string]types.String `tfsdk:"config"`
+}
+
 // TaskResourceModel describes the resource data model.
 type TaskResourceModel struct {
 	ID          types.String `tfsdk:"id"`
@@ -46,10 +56,16 @@ type TaskResourceModel struct {
 	ImageRequired types.Bool              `tfsdk:"image_required"`
 	OutputFormat  map[string]types.String `tfsdk:"output_format"`
 
+	InputProcessors *InputProcessorsModel `tfsdk:"input_processors"`
+
 	ActiveRevisionID types.String `tfsdk:"active_revision_id"`
 }
 
-func (trm *TaskResourceModel) PopulateFromTaskModel(task *entitites.Task) error {
+func (trm *TaskResourceModel) HasInputProcessors() bool {
+	return trm.InputProcessors != nil && len(trm.InputProcessors.InputProcessors) > 0
+}
+
+func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entitites.Task) error {
 
 	rev, err := task.GetActiveRevision()
 	if err != nil {
@@ -66,6 +82,22 @@ func (trm *TaskResourceModel) PopulateFromTaskModel(task *entitites.Task) error 
 	trm.UserPrompt = types.StringValue(rev.UserPrompt)
 	trm.LLMModelID = types.StringValue(rev.LLMModelID)
 	trm.ImageRequired = types.BoolValue(rev.ImageRequired)
+
+	if rev.HasInputProcessors() {
+		trm.InputProcessors = &InputProcessorsModel{
+			InputProcessors: make([]InputProcessorModel, len(*rev.InputProcessors)),
+		}
+		for i, ip := range *rev.InputProcessors {
+			trm.InputProcessors.InputProcessors[i] = InputProcessorModel{
+				ParamName:      types.StringValue(ip.ParamName),
+				InputProcessor: types.StringValue(ip.InputProcessor),
+				Config:         make(map[string]types.String, len(ip.Config)),
+			}
+			for k, v := range ip.Config {
+				trm.InputProcessors.InputProcessors[i].Config[k] = types.StringValue(v)
+			}
+		}
+	}
 
 	trm.ActiveRevisionID = types.StringValue(rev.ID)
 
@@ -135,6 +167,28 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				ElementType: types.StringType,
 			},
 		},
+		Blocks: map[string]schema.Block{
+			"input_processors": schema.SingleNestedBlock{
+				Blocks: map[string]schema.Block{
+					"input_processor": schema.ListNestedBlock{
+						NestedObject: schema.NestedBlockObject{
+							Attributes: map[string]schema.Attribute{
+								"param_name": schema.StringAttribute{
+									Required: true,
+								},
+								"input_processor": schema.StringAttribute{
+									Required: true,
+								},
+								"config": schema.MapAttribute{
+									Optional:    true,
+									ElementType: types.StringType,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -182,13 +236,30 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 		in.OutputFormat[k] = v.ValueString()
 	}
 
+	if data.HasInputProcessors() {
+		in.InputProcessors = &[]entitites.InputProcessor{}
+		for _, v := range data.InputProcessors.InputProcessors {
+			ip := entitites.InputProcessor{
+				ParamName:      v.ParamName.ValueString(),
+				InputProcessor: v.InputProcessor.ValueString(),
+			}
+			for k, v := range v.Config {
+				if ip.Config == nil {
+					ip.Config = make(map[string]string)
+				}
+				ip.Config[k] = v.ValueString()
+			}
+			*in.InputProcessors = append(*in.InputProcessors, ip)
+		}
+	}
+
 	task, err := r.client.Create(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
 
-	if err := data.PopulateFromTaskModel(task); err != nil {
+	if err := data.PopulateFromTaskEntity(task); err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
@@ -213,7 +284,7 @@ func (r *TaskResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	if err := data.PopulateFromTaskModel(task); err != nil {
+	if err := data.PopulateFromTaskEntity(task); err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
@@ -245,13 +316,32 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		in.OutputFormat[k] = v.ValueString()
 	}
 
+	in.InputProcessors = &[]entitites.InputProcessor{}
+
+	if data.HasInputProcessors() {
+		for _, v := range data.InputProcessors.InputProcessors {
+			ip := entitites.InputProcessor{
+
+				ParamName:      v.ParamName.ValueString(),
+				InputProcessor: v.InputProcessor.ValueString(),
+			}
+			for k, v := range v.Config {
+				if ip.Config == nil {
+					ip.Config = make(map[string]string)
+				}
+				ip.Config[k] = v.ValueString()
+			}
+			*in.InputProcessors = append(*in.InputProcessors, ip)
+		}
+	}
+
 	task, err := r.client.Update(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}
 
-	if err := data.PopulateFromTaskModel(task); err != nil {
+	if err := data.PopulateFromTaskEntity(task); err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 		return
 	}

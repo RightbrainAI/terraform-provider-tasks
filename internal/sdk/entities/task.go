@@ -35,16 +35,27 @@ func (t *Task) GetLatestRevision() (*Revision, error) {
 
 // Revision represents a single revision in the "revisions" array.
 type Revision struct {
-	SystemPrompt    string       `json:"system_prompt"`
-	UserPrompt      string       `json:"user_prompt"`
-	LLMModelID      string       `json:"llm_model_id"`
-	OutputFormat    OutputFormat `json:"output_format"`
-	ID              string       `json:"id"`
-	InputParams     []string     `json:"input_params"`
-	TaskForwarderID string       `json:"task_forwarder_id"`
-	ImageRequired   bool         `json:"image_required"`
-	Active          bool         `json:"active"`
-	RAG             RAG          `json:"rag"`
+	SystemPrompt    string            `json:"system_prompt"`
+	UserPrompt      string            `json:"user_prompt"`
+	LLMModelID      string            `json:"llm_model_id"`
+	OutputFormat    OutputFormat      `json:"output_format"`
+	ID              string            `json:"id"`
+	InputParams     []string          `json:"input_params"`
+	TaskForwarderID string            `json:"task_forwarder_id"`
+	ImageRequired   bool              `json:"image_required"`
+	Active          bool              `json:"active"`
+	RAG             RAG               `json:"rag"`
+	InputProcessors *[]InputProcessor `json:"input_processors"`
+}
+
+func (r *Revision) HasInputProcessors() bool {
+	return r.InputProcessors != nil && len(*r.InputProcessors) > 0
+}
+
+type InputProcessor struct {
+	ParamName      string            `json:"param_name"`
+	InputProcessor string            `json:"input_processor"`
+	Config         map[string]string `json:"config"`
 }
 
 // OutputFormat represents the structure of the output format in a revision.
