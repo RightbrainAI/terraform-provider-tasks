@@ -28,9 +28,29 @@ Task resource
 
 - `description` (String) A description of the Task.
 - `image_required` (Boolean)
+- `input_processors` (Block, Optional) (see [below for nested schema](#nestedblock--input_processors))
 - `public` (Boolean)
 
 ### Read-Only
 
 - `active_revision_id` (String)
 - `id` (String) Identifier
+
+<a id="nestedblock--input_processors"></a>
+### Nested Schema for `input_processors`
+
+Optional:
+
+- `input_processor` (Block List) (see [below for nested schema](#nestedblock--input_processors--input_processor))
+
+<a id="nestedblock--input_processors--input_processor"></a>
+### Nested Schema for `input_processors.input_processor`
+
+Required:
+
+- `input_processor` (String)
+- `param_name` (String)
+
+Optional:
+
+- `config` (Map of String)
