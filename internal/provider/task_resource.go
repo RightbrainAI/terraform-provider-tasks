@@ -236,22 +236,7 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 		in.OutputFormat[k] = v.ValueString()
 	}
 
-	if data.HasInputProcessors() {
-		in.InputProcessors = &[]entitites.InputProcessor{}
-		for _, v := range data.InputProcessors.InputProcessors {
-			ip := entitites.InputProcessor{
-				ParamName:      v.ParamName.ValueString(),
-				InputProcessor: v.InputProcessor.ValueString(),
-			}
-			for k, v := range v.Config {
-				if ip.Config == nil {
-					ip.Config = make(map[string]string)
-				}
-				ip.Config[k] = v.ValueString()
-			}
-			*in.InputProcessors = append(*in.InputProcessors, ip)
-		}
-	}
+	*in.InputProcessors = *r.FormatInputProcessors(data)
 
 	task, err := r.client.Create(ctx, in)
 	if err != nil {
@@ -316,24 +301,7 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		in.OutputFormat[k] = v.ValueString()
 	}
 
-	in.InputProcessors = &[]entitites.InputProcessor{}
-
-	if data.HasInputProcessors() {
-		for _, v := range data.InputProcessors.InputProcessors {
-			ip := entitites.InputProcessor{
-
-				ParamName:      v.ParamName.ValueString(),
-				InputProcessor: v.InputProcessor.ValueString(),
-			}
-			for k, v := range v.Config {
-				if ip.Config == nil {
-					ip.Config = make(map[string]string)
-				}
-				ip.Config[k] = v.ValueString()
-			}
-			*in.InputProcessors = append(*in.InputProcessors, ip)
-		}
-	}
+	*in.InputProcessors = *r.FormatInputProcessors(data)
 
 	task, err := r.client.Update(ctx, in)
 	if err != nil {
@@ -369,4 +337,26 @@ func (r *TaskResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 func (r *TaskResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *TaskResource) FormatInputProcessors(data TaskResourceModel) *[]entitites.InputProcessor {
+	ips := []entitites.InputProcessor{}
+	if !data.HasInputProcessors() {
+		return &ips
+	}
+	for _, v := range data.InputProcessors.InputProcessors {
+		ip := entitites.InputProcessor{
+
+			ParamName:      v.ParamName.ValueString(),
+			InputProcessor: v.InputProcessor.ValueString(),
+		}
+		for k, v := range v.Config {
+			if ip.Config == nil {
+				ip.Config = make(map[string]string)
+			}
+			ip.Config[k] = v.ValueString()
+		}
+		ips = append(ips, ip)
+	}
+	return &ips
 }
