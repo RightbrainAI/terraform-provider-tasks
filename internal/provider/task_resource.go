@@ -236,7 +236,7 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 		in.OutputFormat[k] = v.ValueString()
 	}
 
-	*in.InputProcessors = *r.FormatInputProcessors(data)
+	in.InputProcessors = r.FormatInputProcessors(data)
 
 	task, err := r.client.Create(ctx, in)
 	if err != nil {
@@ -301,7 +301,7 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		in.OutputFormat[k] = v.ValueString()
 	}
 
-	*in.InputProcessors = *r.FormatInputProcessors(data)
+	in.InputProcessors = r.FormatInputProcessors(data)
 
 	task, err := r.client.Update(ctx, in)
 	if err != nil {
@@ -346,7 +346,6 @@ func (r *TaskResource) FormatInputProcessors(data TaskResourceModel) *[]entitite
 	}
 	for _, v := range data.InputProcessors.InputProcessors {
 		ip := entitites.InputProcessor{
-
 			ParamName:      v.ParamName.ValueString(),
 			InputProcessor: v.InputProcessor.ValueString(),
 		}
