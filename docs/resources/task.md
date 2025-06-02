@@ -29,6 +29,7 @@ Task resource
 - `description` (String) A description of the Task.
 - `image_required` (Boolean)
 - `input_processors` (Block, Optional) (see [below for nested schema](#nestedblock--input_processors))
+- `output_modality` (String) Specifies the output modality of the task. Can be 'json' or 'image'
 - `public` (Boolean)
 
 ### Read-Only

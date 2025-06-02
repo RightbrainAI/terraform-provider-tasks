@@ -53,13 +53,13 @@ type TaskResourceModel struct {
 	Public      types.Bool   `tfsdk:"public"`
 	Description types.String `tfsdk:"description"`
 
-	SystemPrompt  types.String            `tfsdk:"system_prompt"`
-	UserPrompt    types.String            `tfsdk:"user_prompt"`
-	LLMModelID    types.String            `tfsdk:"llm_model_id"`
-	ImageRequired types.Bool              `tfsdk:"image_required"`
-	OutputFormat  map[string]types.String `tfsdk:"output_format"`
-
-	InputProcessors *InputProcessorsModel `tfsdk:"input_processors"`
+	SystemPrompt    types.String            `tfsdk:"system_prompt"`
+	UserPrompt      types.String            `tfsdk:"user_prompt"`
+	LLMModelID      types.String            `tfsdk:"llm_model_id"`
+	ImageRequired   types.Bool              `tfsdk:"image_required"`
+	OutputFormat    map[string]types.String `tfsdk:"output_format"`
+	OutputModality  types.String            `tfsdk:"output_modality"`
+	InputProcessors *InputProcessorsModel   `tfsdk:"input_processors"`
 
 	ActiveRevisionID types.String `tfsdk:"active_revision_id"`
 }
@@ -170,9 +170,10 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				ElementType: types.StringType,
 			},
 			"output_modality": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
 				Description: "Specifies the output modality of the task. Can be 'json' or 'image'",
 				Default:     stringdefault.StaticString("json"),
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("json", "image"),
 				},
