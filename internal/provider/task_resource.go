@@ -10,12 +10,15 @@ import (
 	"terraform-provider-tasks/internal/sdk"
 	entitites "terraform-provider-tasks/internal/sdk/entities"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -50,13 +53,13 @@ type TaskResourceModel struct {
 	Public      types.Bool   `tfsdk:"public"`
 	Description types.String `tfsdk:"description"`
 
-	SystemPrompt  types.String            `tfsdk:"system_prompt"`
-	UserPrompt    types.String            `tfsdk:"user_prompt"`
-	LLMModelID    types.String            `tfsdk:"llm_model_id"`
-	ImageRequired types.Bool              `tfsdk:"image_required"`
-	OutputFormat  map[string]types.String `tfsdk:"output_format"`
-
-	InputProcessors *InputProcessorsModel `tfsdk:"input_processors"`
+	SystemPrompt    types.String            `tfsdk:"system_prompt"`
+	UserPrompt      types.String            `tfsdk:"user_prompt"`
+	LLMModelID      types.String            `tfsdk:"llm_model_id"`
+	ImageRequired   types.Bool              `tfsdk:"image_required"`
+	OutputFormat    map[string]types.String `tfsdk:"output_format"`
+	OutputModality  types.String            `tfsdk:"output_modality"`
+	InputProcessors *InputProcessorsModel   `tfsdk:"input_processors"`
 
 	ActiveRevisionID types.String `tfsdk:"active_revision_id"`
 }
@@ -166,6 +169,15 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required:    true,
 				ElementType: types.StringType,
 			},
+			"output_modality": schema.StringAttribute{
+				Optional:    true,
+				Description: "Specifies the output modality of the task. Can be 'json' or 'image'",
+				Default:     stringdefault.StaticString("json"),
+				Computed:    true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("json", "image"),
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"input_processors": schema.SingleNestedBlock{
@@ -231,6 +243,7 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 	in.Enabled = data.Enabled.ValueBool()
 	in.Public = data.Public.ValueBool()
 	in.ImageRequired = data.ImageRequired.ValueBool()
+	in.OutputModality = data.OutputModality.ValueString()
 
 	for k, v := range data.OutputFormat {
 		in.OutputFormat[k] = v.ValueString()
@@ -296,6 +309,7 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	in.Enabled = data.Enabled.ValueBool()
 	in.Public = data.Public.ValueBool()
 	in.ImageRequired = data.ImageRequired.ValueBool()
+	in.OutputModality = data.OutputModality.ValueString()
 
 	for k, v := range data.OutputFormat {
 		in.OutputFormat[k] = v.ValueString()

@@ -46,6 +46,7 @@ type Revision struct {
 	Active          bool              `json:"active"`
 	RAG             RAG               `json:"rag"`
 	InputProcessors *[]InputProcessor `json:"input_processors"`
+	OutputModality  string            `json:"output_modality"`
 }
 
 func (r *Revision) HasInputProcessors() bool {
