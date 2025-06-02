@@ -170,7 +170,7 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				ElementType: types.StringType,
 			},
 			"output_modality": schema.StringAttribute{
-				Optional:    true,
+				Required:    true,
 				Description: "Specifies the output modality of the task. Can be 'json' or 'image'",
 				Default:     stringdefault.StaticString("json"),
 				Validators: []validator.String{
@@ -242,6 +242,7 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 	in.Enabled = data.Enabled.ValueBool()
 	in.Public = data.Public.ValueBool()
 	in.ImageRequired = data.ImageRequired.ValueBool()
+	in.OutputModality = data.OutputModality.ValueString()
 
 	for k, v := range data.OutputFormat {
 		in.OutputFormat[k] = v.ValueString()
@@ -307,6 +308,7 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	in.Enabled = data.Enabled.ValueBool()
 	in.Public = data.Public.ValueBool()
 	in.ImageRequired = data.ImageRequired.ValueBool()
+	in.OutputModality = data.OutputModality.ValueString()
 
 	for k, v := range data.OutputFormat {
 		in.OutputFormat[k] = v.ValueString()

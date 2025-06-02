@@ -15,6 +15,7 @@ type CreateTaskRequest struct {
 	LLMModelID      string                      `json:"llm_model_id"`
 	Name            string                      `json:"name"`
 	OutputFormat    map[string]string           `json:"output_format"`
+	OutputModality  string                      `json:"output_modality"`
 	Public          bool                        `json:"public"`
 	SystemPrompt    string                      `json:"system_prompt"`
 	UserPrompt      string                      `json:"user_prompt"`
@@ -35,6 +36,7 @@ type UpdateTaskRequest struct {
 	LLMModelID      string                      `json:"llm_model_id"`
 	Name            string                      `json:"name"`
 	OutputFormat    map[string]string           `json:"output_format"`
+	OutputModality  string                      `json:"output_modality"`
 	Public          bool                        `json:"public"`
 	SystemPrompt    string                      `json:"system_prompt"`
 	UserPrompt      string                      `json:"user_prompt"`
