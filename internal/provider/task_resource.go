@@ -10,12 +10,15 @@ import (
 	"terraform-provider-tasks/internal/sdk"
 	entitites "terraform-provider-tasks/internal/sdk/entities"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -165,6 +168,14 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"output_format": schema.MapAttribute{
 				Required:    true,
 				ElementType: types.StringType,
+			},
+			"output_modality": schema.StringAttribute{
+				Optional:    true,
+				Description: "Specifies the output modality of the task. Can be 'json' or 'image'",
+				Default:     stringdefault.StaticString("json"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("json", "image"),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
