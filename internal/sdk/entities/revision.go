@@ -7,19 +7,19 @@ import (
 
 // Revision represents a single revision in the "revisions" array.
 type Revision struct {
-	Active          bool              `json:"active"`
-	ID              string            `json:"id"`
-	ImageRequired   bool              `json:"image_required"`
-	InputParams     []string          `json:"input_params"`
-	InputProcessors *[]InputProcessor `json:"input_processors"`
-	LLMModelID      string            `json:"llm_model_id"`
-	OptimiseImages  bool              `json:"optimise_images"`
-	OutputFormat    OutputFormat      `json:"output_format"`
-	OutputModality  string            `json:"output_modality"`
-	RAG             RAG               `json:"rag"`
-	SystemPrompt    string            `json:"system_prompt"`
-	TaskForwarderID string            `json:"task_forwarder_id"`
-	UserPrompt      string            `json:"user_prompt"`
+	Active          bool                           `json:"active"`
+	ID              string                         `json:"id"`
+	ImageRequired   bool                           `json:"image_required"`
+	InputParams     []string                       `json:"input_params"`
+	InputProcessors *[]InputProcessor              `json:"input_processors"`
+	LLMModelID      string                         `json:"llm_model_id"`
+	OptimiseImages  bool                           `json:"optimise_images"`
+	OutputFormat    map[string]OutputFormatWrapper `json:"output_format"`
+	OutputModality  string                         `json:"output_modality"`
+	RAG             RAG                            `json:"rag"`
+	SystemPrompt    string                         `json:"system_prompt"`
+	TaskForwarderID string                         `json:"task_forwarder_id"`
+	UserPrompt      string                         `json:"user_prompt"`
 }
 
 func (r *Revision) HasInputProcessors() bool {
@@ -31,9 +31,6 @@ type InputProcessor struct {
 	InputProcessor string            `json:"input_processor"`
 	Config         map[string]string `json:"config"`
 }
-
-// OutputFormat represents the structure of the output format in a revision.
-type OutputFormat map[string]OutputFormatWrapper
 
 type OutputFormatWrapper struct {
 	Complex *OutputFormatComplex

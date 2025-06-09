@@ -47,21 +47,21 @@ type InputProcessorModel struct {
 
 // TaskResourceModel describes the resource data model.
 type TaskResourceModel struct {
-	ActiveRevisionID types.String                      `tfsdk:"active_revision_id"`
-	Description      types.String                      `tfsdk:"description"`
-	Enabled          types.Bool                        `tfsdk:"enabled"`
-	ExposedToAgents  types.Bool                        `tfsdk:"exposed_to_agents"`
-	ID               types.String                      `tfsdk:"id"`
-	ImageRequired    types.Bool                        `tfsdk:"image_required"`
-	InputProcessors  *InputProcessorsModel             `tfsdk:"input_processors"`
-	LLMModelID       types.String                      `tfsdk:"llm_model_id"`
-	Name             types.String                      `tfsdk:"name"`
-	OptimiseImages   types.Bool                        `tfsdk:"optimise_images"`
-	OutputFormat     map[string]entitites.OutputFormat `tfsdk:"output_format"`
-	OutputModality   types.String                      `tfsdk:"output_modality"`
-	Public           types.Bool                        `tfsdk:"public"`
-	SystemPrompt     types.String                      `tfsdk:"system_prompt"`
-	UserPrompt       types.String                      `tfsdk:"user_prompt"`
+	ActiveRevisionID types.String                             `tfsdk:"active_revision_id"`
+	Description      types.String                             `tfsdk:"description"`
+	Enabled          types.Bool                               `tfsdk:"enabled"`
+	ExposedToAgents  types.Bool                               `tfsdk:"exposed_to_agents"`
+	ID               types.String                             `tfsdk:"id"`
+	ImageRequired    types.Bool                               `tfsdk:"image_required"`
+	InputProcessors  *InputProcessorsModel                    `tfsdk:"input_processors"`
+	LLMModelID       types.String                             `tfsdk:"llm_model_id"`
+	Name             types.String                             `tfsdk:"name"`
+	OptimiseImages   types.Bool                               `tfsdk:"optimise_images"`
+	OutputFormat     map[string]entitites.OutputFormatWrapper `tfsdk:"output_format"`
+	OutputModality   types.String                             `tfsdk:"output_modality"`
+	Public           types.Bool                               `tfsdk:"public"`
+	SystemPrompt     types.String                             `tfsdk:"system_prompt"`
+	UserPrompt       types.String                             `tfsdk:"user_prompt"`
 }
 
 func (trm *TaskResourceModel) HasInputProcessors() bool {
