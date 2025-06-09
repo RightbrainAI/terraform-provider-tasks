@@ -7,46 +7,42 @@ import (
 	entitites "terraform-provider-tasks/internal/sdk/entities"
 )
 
+type BaseTaskProperties struct {
+	Description     string                            `json:"description"`
+	Enabled         bool                              `json:"enabled"`
+	ExposedToAgents bool                              `json:"exposed_to_agents"`
+	ImageRequired   bool                              `json:"image_required"`
+	InputProcessors *[]entitites.InputProcessor       `json:"input_processors"`
+	LLMModelID      string                            `json:"llm_model_id"`
+	Name            string                            `json:"name"`
+	OptimiseImages  bool                              `json:"optimise_images"`
+	OutputFormat    map[string]entitites.OutputFormat `json:"output_format"`
+	OutputModality  string                            `json:"output_modality"`
+	Public          bool                              `json:"public"`
+	SystemPrompt    string                            `json:"system_prompt"`
+	UserPrompt      string                            `json:"user_prompt"`
+}
+
 type CreateTaskRequest struct {
-	Description     string                      `json:"description"`
-	Enabled         bool                        `json:"enabled"`
-	ImageRequired   bool                        `json:"image_required"`
-	InputProcessors *[]entitites.InputProcessor `json:"input_processors"`
-	LLMModelID      string                      `json:"llm_model_id"`
-	Name            string                      `json:"name"`
-	OutputFormat    map[string]string           `json:"output_format"`
-	OutputModality  string                      `json:"output_modality"`
-	Public          bool                        `json:"public"`
-	SystemPrompt    string                      `json:"system_prompt"`
-	UserPrompt      string                      `json:"user_prompt"`
+	BaseTaskProperties
 }
 
 func NewCreateTaskRequest() CreateTaskRequest {
-	return CreateTaskRequest{
-		OutputFormat: make(map[string]string, 0),
-	}
+	req := CreateTaskRequest{}
+	req.OutputFormat = make(map[string]entitites.OutputFormat, 0)
+	return req
 }
 
 type UpdateTaskRequest struct {
-	ID              string                      `json:"id"`
-	Description     string                      `json:"description"`
-	Enabled         bool                        `json:"enabled"`
-	ImageRequired   bool                        `json:"image_required"`
-	InputProcessors *[]entitites.InputProcessor `json:"input_processors"`
-	LLMModelID      string                      `json:"llm_model_id"`
-	Name            string                      `json:"name"`
-	OutputFormat    map[string]string           `json:"output_format"`
-	OutputModality  string                      `json:"output_modality"`
-	Public          bool                        `json:"public"`
-	SystemPrompt    string                      `json:"system_prompt"`
-	UserPrompt      string                      `json:"user_prompt"`
+	BaseTaskProperties
+	ID string `json:"id"`
 }
 
 func NewUpdateTaskRequest(id string) UpdateTaskRequest {
-	return UpdateTaskRequest{
-		ID:           id,
-		OutputFormat: make(map[string]string, 0),
-	}
+	req := UpdateTaskRequest{}
+	req.ID = id
+	req.OutputFormat = make(map[string]entitites.OutputFormat, 0)
+	return req
 }
 
 type DeleteTaskRequest struct {

@@ -9,4 +9,5 @@ type Config struct {
 	RightbrainClientSecret string
 	RightbrainOrgID        string
 	RightbrainProjectID    string
+	RightbrainAPIVersion   string
 }

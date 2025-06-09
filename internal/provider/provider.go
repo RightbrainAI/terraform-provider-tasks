@@ -139,6 +139,7 @@ func (p *RightbrainProvider) newRightbrainClient(data RightbrainProviderModel) (
 		RightbrainClientSecret: data.RightbrainClientSecret.ValueString(),
 		RightbrainOrgID:        data.RightbrainOrgID.ValueString(),
 		RightbrainProjectID:    data.RightbrainProjectID.ValueString(),
+		RightbrainAPIVersion:   sdk.DefaultAPIVersion,
 	}), nil
 }
 

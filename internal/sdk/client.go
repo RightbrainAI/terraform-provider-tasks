@@ -34,7 +34,7 @@ type TasksClient struct {
 }
 
 func (tc *TasksClient) Fetch(ctx context.Context, in FetchTaskRequest) (*entitites.Task, error) {
-	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), in.ID)
+	url := tc.getTaskAPIURL(&in.ID)
 	tc.log.Info("fetching task", "id", in.ID, "url", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -66,7 +66,7 @@ func (tc *TasksClient) Create(ctx context.Context, in CreateTaskRequest) (*entit
 	if err := json.NewEncoder(data).Encode(&in); err != nil {
 		return nil, err
 	}
-	url := fmt.Sprintf("%s/task", tc.getBaseAPIURL())
+	url := tc.getTaskAPIURL(nil)
 	tc.log.Info("creating task", "url", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, data)
 	if err != nil {
@@ -95,7 +95,7 @@ func (tc *TasksClient) Update(ctx context.Context, in UpdateTaskRequest) (*entit
 	if err := json.NewEncoder(data).Encode(&in); err != nil {
 		return nil, err
 	}
-	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), in.ID)
+	url := tc.getTaskAPIURL(&in.ID)
 	tc.log.Error("updating task", "id", in.ID, "url", url)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, data)
@@ -123,7 +123,7 @@ func (tc *TasksClient) Update(ctx context.Context, in UpdateTaskRequest) (*entit
 }
 
 func (tc *TasksClient) Delete(ctx context.Context, in DeleteTaskRequest) error {
-	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), in.ID)
+	url := tc.getTaskAPIURL(&in.ID)
 	tc.log.Info("deleting task", "id", in.ID, "url", url)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
@@ -177,12 +177,20 @@ func (tc *TasksClient) DoWithAuth(ctx context.Context, req *http.Request) (*http
 	return tc.httpClient.Do(req)
 }
 
+func (tc *TasksClient) getTaskAPIURL(taskID *string) string {
+	base := tc.getBaseAPIURL() + "/task"
+	if taskID != nil {
+		return base + "/" + *taskID
+	}
+	return base
+}
+
 func (tc *TasksClient) getBaseAPIURL() string {
 	return fmt.Sprintf("%s/api/%s/org/%s/project/%s", tc.config.RightbrainAPIHost, DefaultAPIVersion, tc.config.RightbrainOrgID, tc.config.RightbrainProjectID)
 }
 
 func (tc *TasksClient) markLatestTaskRevisionAsActive(ctx context.Context, task *entitites.Task) error {
-	url := fmt.Sprintf("%s/task/%s", tc.getBaseAPIURL(), task.ID)
+	url := tc.getTaskAPIURL(&task.ID)
 	tc.log.Info("updating task", "id", task.ID, "url", url)
 
 	rev, err := task.GetLatestRevision()
@@ -221,9 +229,12 @@ func (tc *TasksClient) assertStatusCode(prefix string, expected int, res *http.R
 		return nil
 	}
 
-	body, _ := io.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		tc.log.Error("unable to read response body", "err", err)
+	}
 
-	tc.log.Info("status code was not as expected", "expected", expected, "got", res.StatusCode, "body", string(body))
+	tc.log.Error("status code was not as expected", "expected", expected, "got", res.StatusCode, "body", string(body))
 
-	return fmt.Errorf("%s, expected status code %d but got %d.", prefix, expected, res.StatusCode)
+	return fmt.Errorf("%s, expected status code %d but got %d", prefix, expected, res.StatusCode)
 }
