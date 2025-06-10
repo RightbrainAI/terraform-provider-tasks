@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+const TASK_SCHEMA_VERSION = 0
+
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &TaskResource{}
 var _ resource.ResourceWithImportState = &TaskResource{}
@@ -113,8 +115,9 @@ func (r *TaskResource) Metadata(ctx context.Context, req resource.MetadataReques
 
 func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		// This description is used by the documentation generator and the language server.
+
 		MarkdownDescription: "Task resource",
+		Version:             TASK_SCHEMA_VERSION,
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
