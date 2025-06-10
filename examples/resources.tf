@@ -1,3 +1,5 @@
+# Copyright (c) HashiCorp, Inc.
+
 resource "rightbrain_task" "tell-me-a-joke" {
   name        = "Tell me a Joke!"
   description = "Tells a joke about a given subject :)"

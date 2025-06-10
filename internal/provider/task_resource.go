@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-const TASK_SCHEMA_VERSION = 0
+const TASK_SCHEMA_VERSION = 1
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &TaskResource{}
@@ -192,6 +192,7 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			"output_format": schema.MapNestedAttribute{
+				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{

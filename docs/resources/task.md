@@ -20,15 +20,17 @@ Task resource
 - `enabled` (Boolean) When `true` the Task is active and callable.
 - `llm_model_id` (String) The ID of the LLM model to use for the Task.
 - `name` (String) A name or reference for the Task.
-- `output_format` (Map of String)
+- `output_format` (Attributes Map) (see [below for nested schema](#nestedatt--output_format))
 - `system_prompt` (String) The system prompt that is used to set the LLM context.
 - `user_prompt` (String) The user prompt that is used to set the LLM context.
 
 ### Optional
 
 - `description` (String) A description of the Task.
-- `image_required` (Boolean)
+- `exposed_to_agents` (Boolean)
+- `image_required` (Boolean) When true it requires an image to be sent in the Task Run request.
 - `input_processors` (Block, Optional) (see [below for nested schema](#nestedblock--input_processors))
+- `optimise_images` (Boolean) When true (default) images will be automatically optimised before processing. Set to false to disable lossy image optimisation.
 - `output_modality` (String) Specifies the output modality of the task. Can be 'json' or 'image'
 - `public` (Boolean)
 
@@ -36,6 +38,21 @@ Task resource
 
 - `active_revision_id` (String)
 - `id` (String) Identifier
+
+<a id="nestedatt--output_format"></a>
+### Nested Schema for `output_format`
+
+Required:
+
+- `type` (String)
+
+Optional:
+
+- `description` (String)
+- `item_type` (String)
+- `object` (Map of String)
+- `options` (Map of String)
+
 
 <a id="nestedblock--input_processors"></a>
 ### Nested Schema for `input_processors`
