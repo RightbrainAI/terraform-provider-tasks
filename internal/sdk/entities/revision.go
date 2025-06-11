@@ -1,6 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 
-package entitites
+package entities
 
 import (
 	"encoding/json"

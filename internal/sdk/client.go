@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	entitites "terraform-provider-tasks/internal/sdk/entities"
+	entities "terraform-provider-tasks/internal/sdk/entities"
 )
 
 const (
@@ -33,7 +33,7 @@ type TasksClient struct {
 	config     Config
 }
 
-func (tc *TasksClient) Fetch(ctx context.Context, in FetchTaskRequest) (*entitites.Task, error) {
+func (tc *TasksClient) Fetch(ctx context.Context, in FetchTaskRequest) (*entities.Task, error) {
 	url := tc.getTaskAPIURL(&in.ID)
 	tc.log.Info("fetching task", "id", in.ID, "url", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -51,7 +51,7 @@ func (tc *TasksClient) Fetch(ctx context.Context, in FetchTaskRequest) (*entitit
 		return nil, err
 	}
 
-	task := new(entitites.Task)
+	task := new(entities.Task)
 
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
 		tc.log.Error(err.Error())
@@ -61,7 +61,7 @@ func (tc *TasksClient) Fetch(ctx context.Context, in FetchTaskRequest) (*entitit
 	return task, nil
 }
 
-func (tc *TasksClient) Create(ctx context.Context, in CreateTaskRequest) (*entitites.Task, error) {
+func (tc *TasksClient) Create(ctx context.Context, in CreateTaskRequest) (*entities.Task, error) {
 	var data = new(bytes.Buffer)
 	if err := json.NewEncoder(data).Encode(&in); err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (tc *TasksClient) Create(ctx context.Context, in CreateTaskRequest) (*entit
 		tc.log.Error(err.Error())
 		return nil, err
 	}
-	task := new(entitites.Task)
+	task := new(entities.Task)
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
 		tc.log.Error(err.Error())
 		return nil, err
@@ -90,7 +90,7 @@ func (tc *TasksClient) Create(ctx context.Context, in CreateTaskRequest) (*entit
 	return task, nil
 }
 
-func (tc *TasksClient) Update(ctx context.Context, in UpdateTaskRequest) (*entitites.Task, error) {
+func (tc *TasksClient) Update(ctx context.Context, in UpdateTaskRequest) (*entities.Task, error) {
 	var data = new(bytes.Buffer)
 	if err := json.NewEncoder(data).Encode(&in); err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (tc *TasksClient) Update(ctx context.Context, in UpdateTaskRequest) (*entit
 		tc.log.Error(err.Error())
 		return nil, err
 	}
-	task := new(entitites.Task)
+	task := new(entities.Task)
 	if err := json.NewDecoder(res.Body).Decode(&task); err != nil {
 		tc.log.Error(err.Error())
 		return nil, err
@@ -141,7 +141,7 @@ func (tc *TasksClient) Delete(ctx context.Context, in DeleteTaskRequest) error {
 	return nil
 }
 
-func (tc *TasksClient) GetAvailableLLMModels(ctx context.Context) ([]entitites.Model, error) {
+func (tc *TasksClient) GetAvailableLLMModels(ctx context.Context) ([]entities.Model, error) {
 	url := fmt.Sprintf("%s/model", tc.getBaseAPIURL())
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -159,7 +159,7 @@ func (tc *TasksClient) GetAvailableLLMModels(ctx context.Context) ([]entitites.M
 
 	defer res.Body.Close()
 
-	var models []entitites.Model
+	var models []entities.Model
 
 	if err := json.NewDecoder(res.Body).Decode(&models); err != nil {
 		return nil, err
@@ -189,7 +189,7 @@ func (tc *TasksClient) getBaseAPIURL() string {
 	return fmt.Sprintf("%s/api/%s/org/%s/project/%s", tc.config.RightbrainAPIHost, DefaultAPIVersion, tc.config.RightbrainOrgID, tc.config.RightbrainProjectID)
 }
 
-func (tc *TasksClient) markLatestTaskRevisionAsActive(ctx context.Context, task *entitites.Task) error {
+func (tc *TasksClient) markLatestTaskRevisionAsActive(ctx context.Context, task *entities.Task) error {
 	url := tc.getTaskAPIURL(&task.ID)
 	tc.log.Info("updating task", "id", task.ID, "url", url)
 

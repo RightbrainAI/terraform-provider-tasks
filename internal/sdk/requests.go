@@ -4,23 +4,23 @@
 package sdk
 
 import (
-	entitites "terraform-provider-tasks/internal/sdk/entities"
+	entities "terraform-provider-tasks/internal/sdk/entities"
 )
 
 type BaseTaskProperties struct {
-	Description     string                                   `json:"description"`
-	Enabled         bool                                     `json:"enabled"`
-	ExposedToAgents bool                                     `json:"exposed_to_agents"`
-	ImageRequired   bool                                     `json:"image_required"`
-	InputProcessors *[]entitites.InputProcessor              `json:"input_processors"`
-	LLMModelID      string                                   `json:"llm_model_id"`
-	Name            string                                   `json:"name"`
-	OptimiseImages  bool                                     `json:"optimise_images"`
-	OutputFormat    map[string]entitites.OutputFormatWrapper `json:"output_format"`
-	OutputModality  string                                   `json:"output_modality"`
-	Public          bool                                     `json:"public"`
-	SystemPrompt    string                                   `json:"system_prompt"`
-	UserPrompt      string                                   `json:"user_prompt"`
+	Description     string                                  `json:"description"`
+	Enabled         bool                                    `json:"enabled"`
+	ExposedToAgents bool                                    `json:"exposed_to_agents"`
+	ImageRequired   bool                                    `json:"image_required"`
+	InputProcessors *[]entities.InputProcessor              `json:"input_processors"`
+	LLMModelID      string                                  `json:"llm_model_id"`
+	Name            string                                  `json:"name"`
+	OptimiseImages  bool                                    `json:"optimise_images"`
+	OutputFormat    map[string]entities.OutputFormatWrapper `json:"output_format"`
+	OutputModality  string                                  `json:"output_modality"`
+	Public          bool                                    `json:"public"`
+	SystemPrompt    string                                  `json:"system_prompt"`
+	UserPrompt      string                                  `json:"user_prompt"`
 }
 
 type CreateTaskRequest struct {
@@ -29,7 +29,7 @@ type CreateTaskRequest struct {
 
 func NewCreateTaskRequest() CreateTaskRequest {
 	req := CreateTaskRequest{}
-	req.OutputFormat = make(map[string]entitites.OutputFormatWrapper, 0)
+	req.OutputFormat = make(map[string]entities.OutputFormatWrapper, 0)
 	return req
 }
 
@@ -41,7 +41,7 @@ type UpdateTaskRequest struct {
 func NewUpdateTaskRequest(id string) UpdateTaskRequest {
 	req := UpdateTaskRequest{}
 	req.ID = id
-	req.OutputFormat = make(map[string]entitites.OutputFormatWrapper, 0)
+	req.OutputFormat = make(map[string]entities.OutputFormatWrapper, 0)
 	return req
 }
 
