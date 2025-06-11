@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"terraform-provider-tasks/internal/sdk"
-	entitites "terraform-provider-tasks/internal/sdk/entities"
+	entities "terraform-provider-tasks/internal/sdk/entities"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -111,7 +111,7 @@ func (d *LLMModelDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	var found *entitites.Model
+	var found *entities.Model
 
 	for _, model := range models {
 		if model.Name == data.Name.ValueString() {

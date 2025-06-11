@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package entitites
+package entities
 
 type Model struct {
 	ID             string `json:"id"`

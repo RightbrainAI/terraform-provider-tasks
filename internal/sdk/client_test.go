@@ -45,9 +45,10 @@ func TestTasksClient(t *testing.T) {
 		ts, err := sdk.NewTokenStore(sdk.NullLog{}, clock.New(), http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
 		tc := sdk.NewTasksClient(sdk.NullLog{}, http.DefaultClient, ts, sdk.Config{
-			RightbrainAPIHost:   mockAPIServer.URL,
-			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
-			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
+			RightbrainAPIHost:    mockAPIServer.URL,
+			RightbrainOrgID:      "00000001-00000000-00000000-00000000",
+			RightbrainProjectID:  "019010a2-8327-2607-11d7-41bb0a8936d4",
+			RightbrainAPIVersion: sdk.DefaultAPIVersion,
 		})
 		_, err = tc.Fetch(ctx, sdk.NewFetchTaskRequest("019011e6-e530-3aca-6cf7-2973387c255d"))
 		assert.NoError(t, err)
@@ -74,14 +75,17 @@ func TestTasksClient(t *testing.T) {
 		ts, err := sdk.NewTokenStore(sdk.NullLog{}, clock.New(), http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
 		tc := sdk.NewTasksClient(sdk.NullLog{}, http.DefaultClient, ts, sdk.Config{
-			RightbrainAPIHost:   mockAPIServer.URL,
-			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
-			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
+			RightbrainAPIHost:    mockAPIServer.URL,
+			RightbrainOrgID:      "00000001-00000000-00000000-00000000",
+			RightbrainProjectID:  "019010a2-8327-2607-11d7-41bb0a8936d4",
+			RightbrainAPIVersion: sdk.DefaultAPIVersion,
 		})
 		task, err := tc.Fetch(ctx, sdk.NewFetchTaskRequest("019011e6-e530-3aca-6cf7-2973387c255d"))
 		assert.NoError(t, err)
 		assert.Equal(t, 1, calls)
 		assert.Equal(t, "019011e6-e530-3aca-6cf7-2973387c255d", task.ID)
+		assert.Equal(t, "str", task.Revisions[0].OutputFormat["foo"].Simple.String())
+		assert.Equal(t, "bool", task.Revisions[0].OutputFormat["bar"].Complex.Type)
 	})
 
 	t.Run("test that it sends a create request", func(t *testing.T) {
@@ -103,13 +107,14 @@ func TestTasksClient(t *testing.T) {
 		ts, err := sdk.NewTokenStore(sdk.NullLog{}, clock.New(), http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
 		tc := sdk.NewTasksClient(sdk.NullLog{}, http.DefaultClient, ts, sdk.Config{
-			RightbrainAPIHost:   mockAPIServer.URL,
-			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
-			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
+			RightbrainAPIHost:    mockAPIServer.URL,
+			RightbrainOrgID:      "00000001-00000000-00000000-00000000",
+			RightbrainProjectID:  "019010a2-8327-2607-11d7-41bb0a8936d4",
+			RightbrainAPIVersion: sdk.DefaultAPIVersion,
 		})
-		in := sdk.CreateTaskRequest{
-			Description: "A task to pre-triage user onboarding before IDV.",
-		}
+		in := sdk.CreateTaskRequest{}
+		in.Description = "A task to pre-triage user onboarding before IDV."
+
 		task, err := tc.Create(ctx, in)
 		assert.NoError(t, err)
 		assert.Equal(t, "019011e6-e530-3aca-6cf7-2973387c255d", task.ID)
@@ -141,14 +146,15 @@ func TestTasksClient(t *testing.T) {
 		ts, err := sdk.NewTokenStore(sdk.NullLog{}, clock.New(), http.DefaultClient, mockOAuthServer.URL)
 		assert.NoError(t, err)
 		tc := sdk.NewTasksClient(sdk.NullLog{}, http.DefaultClient, ts, sdk.Config{
-			RightbrainAPIHost:   mockAPIServer.URL,
-			RightbrainOrgID:     "00000001-00000000-00000000-00000000",
-			RightbrainProjectID: "019010a2-8327-2607-11d7-41bb0a8936d4",
+			RightbrainAPIHost:    mockAPIServer.URL,
+			RightbrainOrgID:      "00000001-00000000-00000000-00000000",
+			RightbrainProjectID:  "019010a2-8327-2607-11d7-41bb0a8936d4",
+			RightbrainAPIVersion: sdk.DefaultAPIVersion,
 		})
-		in := sdk.UpdateTaskRequest{
-			ID:          "019011e6-e530-3aca-6cf7-2973387c255d",
-			Description: "A task to pre-triage user onboarding before IDV.",
-		}
+		in := sdk.UpdateTaskRequest{}
+		in.ID = "019011e6-e530-3aca-6cf7-2973387c255d"
+		in.Description = "A task to pre-triage user onboarding before IDV."
+
 		task, err := tc.Update(ctx, in)
 		assert.NoError(t, err)
 		assert.Equal(t, "019011e6-e530-3aca-6cf7-2973387c255d", task.ID)
