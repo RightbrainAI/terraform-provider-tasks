@@ -49,11 +49,12 @@ type InputProcessorModel struct {
 
 // TaskResourceModel describes the resource data model.
 type TaskResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Enabled     types.Bool   `tfsdk:"enabled"`
-	Public      types.Bool   `tfsdk:"public"`
-	Description types.String `tfsdk:"description"`
+	ID              types.String `tfsdk:"id"`
+	Name            types.String `tfsdk:"name"`
+	Enabled         types.Bool   `tfsdk:"enabled"`
+	Public          types.Bool   `tfsdk:"public"`
+	Description     types.String `tfsdk:"description"`
+	ExposedToAgents types.Bool   `tfsdk:"exposed_to_agents"`
 
 	SystemPrompt    types.String            `tfsdk:"system_prompt"`
 	UserPrompt      types.String            `tfsdk:"user_prompt"`
@@ -62,6 +63,7 @@ type TaskResourceModel struct {
 	OutputFormat    map[string]types.String `tfsdk:"output_format"`
 	OutputModality  types.String            `tfsdk:"output_modality"`
 	InputProcessors *InputProcessorsModel   `tfsdk:"input_processors"`
+	OptimiseImages  types.Bool              `tfsdk:"optimise_images"`
 
 	ActiveRevisionID types.String `tfsdk:"active_revision_id"`
 }
@@ -83,10 +85,12 @@ func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entitites.Task) error
 	trm.Public = types.BoolValue(task.Public)
 	trm.Description = types.StringValue(task.Description)
 
+	trm.OptimiseImages = types.BoolValue(rev.OptimiseImages)
 	trm.SystemPrompt = types.StringValue(rev.SystemPrompt)
 	trm.UserPrompt = types.StringValue(rev.UserPrompt)
 	trm.LLMModelID = types.StringValue(rev.LLMModelID)
 	trm.ImageRequired = types.BoolValue(rev.ImageRequired)
+	trm.ExposedToAgents = types.BoolValue(task.ExposedToAgents)
 
 	if rev.HasInputProcessors() {
 		trm.InputProcessors = &InputProcessorsModel{
@@ -148,6 +152,12 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"active_revision_id": schema.StringAttribute{
 				Computed: true,
 			},
+			"exposed_to_agents": schema.BoolAttribute{
+				Optional:    true,
+				Description: "",
+				Default:     booldefault.StaticBool(false),
+				Computed:    true,
+			},
 
 			// revision specific
 			"system_prompt": schema.StringAttribute{
@@ -171,6 +181,12 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"output_format": schema.MapAttribute{
 				Required:    true,
 				ElementType: types.StringType,
+			},
+			"optimise_images": schema.BoolAttribute{
+				Optional:    true,
+				Description: "When true (default) images will be automatically optimised before processing. Set to false to disable lossy image optimisation.",
+				Default:     booldefault.StaticBool(true),
+				Computed:    true,
 			},
 			"output_modality": schema.StringAttribute{
 				Optional:    true,
