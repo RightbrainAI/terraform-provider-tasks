@@ -27,8 +27,10 @@ Task resource
 ### Optional
 
 - `description` (String) A description of the Task.
+- `exposed_to_agents` (Boolean)
 - `image_required` (Boolean)
 - `input_processors` (Block, Optional) (see [below for nested schema](#nestedblock--input_processors))
+- `optimise_images` (Boolean) When true (default) images will be automatically optimised before processing. Set to false to disable lossy image optimisation.
 - `output_modality` (String) Specifies the output modality of the task. Can be 'json' or 'image'
 - `public` (Boolean)
 

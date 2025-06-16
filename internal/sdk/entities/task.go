@@ -7,14 +7,15 @@ import "fmt"
 
 // Root represents the overall response structure.
 type Task struct {
-	Name        string     `json:"name"`
-	Enabled     bool       `json:"enabled"`
-	Public      bool       `json:"public"`
-	ID          string     `json:"id"`
-	ProjectID   string     `json:"project_id"`
-	Revisions   []Revision `json:"revisions"`
-	Description string     `json:"description"`
-	AccessToken string     `json:"access_token"`
+	AccessToken     string     `json:"access_token"`
+	Description     string     `json:"description"`
+	Enabled         bool       `json:"enabled"`
+	ExposedToAgents bool       `json:"exposed_to_agents"`
+	ID              string     `json:"id"`
+	Name            string     `json:"name"`
+	ProjectID       string     `json:"project_id"`
+	Public          bool       `json:"public"`
+	Revisions       []Revision `json:"revisions"`
 }
 
 func (t *Task) GetActiveRevision() (*Revision, error) {
@@ -35,18 +36,19 @@ func (t *Task) GetLatestRevision() (*Revision, error) {
 
 // Revision represents a single revision in the "revisions" array.
 type Revision struct {
-	SystemPrompt    string            `json:"system_prompt"`
-	UserPrompt      string            `json:"user_prompt"`
-	LLMModelID      string            `json:"llm_model_id"`
-	OutputFormat    OutputFormat      `json:"output_format"`
-	ID              string            `json:"id"`
-	InputParams     []string          `json:"input_params"`
-	TaskForwarderID string            `json:"task_forwarder_id"`
-	ImageRequired   bool              `json:"image_required"`
 	Active          bool              `json:"active"`
-	RAG             RAG               `json:"rag"`
+	ID              string            `json:"id"`
+	ImageRequired   bool              `json:"image_required"`
+	InputParams     []string          `json:"input_params"`
 	InputProcessors *[]InputProcessor `json:"input_processors"`
+	LLMModelID      string            `json:"llm_model_id"`
+	OptimiseImages  bool              `json:"optimise_images"`
+	OutputFormat    OutputFormat      `json:"output_format"`
 	OutputModality  string            `json:"output_modality"`
+	RAG             RAG               `json:"rag"`
+	SystemPrompt    string            `json:"system_prompt"`
+	TaskForwarderID string            `json:"task_forwarder_id"`
+	UserPrompt      string            `json:"user_prompt"`
 }
 
 func (r *Revision) HasInputProcessors() bool {
