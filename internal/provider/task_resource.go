@@ -88,6 +88,10 @@ func (trm *TaskResourceModel) HasInputProcessors() bool {
 	return trm.InputProcessors != nil && len(trm.InputProcessors.InputProcessors) > 0
 }
 
+func (trm *TaskResourceModel) HasOutputFormats() bool {
+	return trm.OutputFormats != nil && len(trm.OutputFormats.OutputFormats) > 0
+}
+
 func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entities.Task) error {
 
 	rev, err := task.GetActiveRevision()
@@ -108,6 +112,7 @@ func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entities.Task) error 
 	trm.OutputModality = types.StringValue(rev.OutputModality)
 	trm.SystemPrompt = types.StringValue(rev.SystemPrompt)
 	trm.UserPrompt = types.StringValue(rev.UserPrompt)
+	trm.ActiveRevisionID = types.StringValue(rev.ID)
 
 	if rev.HasInputProcessors() {
 		trm.InputProcessors = &InputProcessorModelCollection{
@@ -132,6 +137,7 @@ func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entities.Task) error 
 
 	for k, v := range rev.OutputFormat {
 		if v.IsSimple() {
+			trm.OutputFormat[k] = types.StringValue(v.Simple.String())
 			trm.OutputFormats.OutputFormats = append(trm.OutputFormats.OutputFormats, OutputFormatModel{
 				Name: types.StringValue(k),
 				Type: types.StringValue(v.Simple.String()),
@@ -482,19 +488,21 @@ func (r *TaskResource) FormatOutputFormat(data TaskResourceModel) map[string]ent
 			}
 		}
 	}
-	for _, v := range data.OutputFormats.OutputFormats {
-		ofw[v.Name.ValueString()] = entities.OutputFormatExtended{
-			Description: v.Description.ValueString(),
-			Object:      make(map[string]string),
-			Options:     make(map[string]string),
-			Type:        v.Type.ValueString(),
-			ItemType:    v.ItemType.ValueString(),
-		}
-		for k, v := range v.Object {
-			ofw[k].Object[k] = v.ValueString()
-		}
-		for k, v := range v.Options {
-			ofw[k].Options[k] = v.ValueString()
+	if data.HasOutputFormats() {
+		for _, v := range data.OutputFormats.OutputFormats {
+			ofw[v.Name.ValueString()] = entities.OutputFormatExtended{
+				Description: v.Description.ValueString(),
+				Object:      make(map[string]string, len(v.Object)),
+				Options:     make(map[string]string, len(v.Options)),
+				Type:        v.Type.ValueString(),
+				ItemType:    v.ItemType.ValueString(),
+			}
+			for k, obv := range v.Object {
+				ofw[v.Name.ValueString()].Object[k] = obv.ValueString()
+			}
+			for k, obv := range v.Options {
+				ofw[v.Name.ValueString()].Options[k] = obv.ValueString()
+			}
 		}
 	}
 	return ofw
