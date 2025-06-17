@@ -31,6 +31,7 @@ Task resource
 - `image_required` (Boolean)
 - `input_processors` (Block, Optional) (see [below for nested schema](#nestedblock--input_processors))
 - `optimise_images` (Boolean) When true (default) images will be automatically optimised before processing. Set to false to disable lossy image optimisation.
+- `output_formats` (Block, Optional) (see [below for nested schema](#nestedblock--output_formats))
 - `output_modality` (String) Specifies the output modality of the task. Can be 'json' or 'image'
 - `public` (Boolean)
 
@@ -57,3 +58,27 @@ Required:
 Optional:
 
 - `config` (Map of String)
+
+
+
+<a id="nestedblock--output_formats"></a>
+### Nested Schema for `output_formats`
+
+Optional:
+
+- `output_format` (Block List) (see [below for nested schema](#nestedblock--output_formats--output_format))
+
+<a id="nestedblock--output_formats--output_format"></a>
+### Nested Schema for `output_formats.output_format`
+
+Required:
+
+- `name` (String)
+- `type` (String)
+
+Optional:
+
+- `description` (String)
+- `item_type` (String)
+- `object` (Map of String)
+- `options` (Map of String)

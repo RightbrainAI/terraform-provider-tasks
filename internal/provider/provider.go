@@ -133,7 +133,7 @@ func (p *RightbrainProvider) newRightbrainClient(data RightbrainProviderModel) (
 	if err != nil {
 		return nil, err
 	}
-	return sdk.NewTasksClient(TerraformLog{}, http.DefaultClient, tokenStore, sdk.Config{
+	return sdk.NewTasksClient(NewTerraformLog(), http.DefaultClient, tokenStore, sdk.Config{
 		RightbrainAPIHost:      p.isEmptyValueElseDefault(data.RightbrainAPIHost, DefaultAPIHost),
 		RightbrainClientID:     data.RightbrainClientID.ValueString(),
 		RightbrainClientSecret: data.RightbrainClientSecret.ValueString(),
