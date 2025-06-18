@@ -28,6 +28,7 @@ const TASK_SCHEMA_VERSION = 0
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &TaskResource{}
 var _ resource.ResourceWithImportState = &TaskResource{}
+var _ resource.ResourceWithModifyPlan = &TaskResource{}
 
 func NewTaskResource() resource.Resource {
 	return &TaskResource{}
@@ -58,7 +59,7 @@ type OutputFormatModel struct {
 	Object      map[string]types.String `tfsdk:"object"`
 	Options     map[string]types.String `tfsdk:"options"`
 	Type        types.String            `tfsdk:"type"`
-	Name        types.String            `tfsdk:"name"`
+	ParamName   types.String            `tfsdk:"param_name"`
 	ItemType    types.String            `tfsdk:"item_type"`
 }
 
@@ -89,7 +90,7 @@ func (trm *TaskResourceModel) HasInputProcessors() bool {
 }
 
 func (trm *TaskResourceModel) HasOutputFormats() bool {
-	return trm.OutputFormats != nil && len(trm.OutputFormats.OutputFormats) > 0
+	return trm.OutputFormats != nil
 }
 
 func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entities.Task) error {
@@ -139,8 +140,8 @@ func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entities.Task) error 
 		if v.IsSimple() {
 			trm.OutputFormat[k] = types.StringValue(v.Simple.String())
 			trm.OutputFormats.OutputFormats = append(trm.OutputFormats.OutputFormats, OutputFormatModel{
-				Name: types.StringValue(k),
-				Type: types.StringValue(v.Simple.String()),
+				ParamName: types.StringValue(k),
+				Type:      types.StringValue(v.Simple.String()),
 			})
 		}
 		if v.IsExtended() {
@@ -255,7 +256,7 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					"output_format": schema.ListNestedBlock{
 						NestedObject: schema.NestedBlockObject{
 							Attributes: map[string]schema.Attribute{
-								"name": schema.StringAttribute{
+								"param_name": schema.StringAttribute{
 									Required: true,
 								},
 								"type": schema.StringAttribute{
@@ -482,7 +483,7 @@ func (r *TaskResource) FormatInputProcessors(data TaskResourceModel) *[]entities
 func (r *TaskResource) FormatOutputFormat(data TaskResourceModel) map[string]entities.OutputFormatExtended {
 	ofw := make(map[string]entities.OutputFormatExtended)
 	for k, v := range data.OutputFormat {
-		if v.ValueString() == "" {
+		if v.ValueString() != "" {
 			ofw[k] = entities.OutputFormatExtended{
 				Type: v.ValueString(),
 			}
@@ -490,7 +491,7 @@ func (r *TaskResource) FormatOutputFormat(data TaskResourceModel) map[string]ent
 	}
 	if data.HasOutputFormats() {
 		for _, v := range data.OutputFormats.OutputFormats {
-			ofw[v.Name.ValueString()] = entities.OutputFormatExtended{
+			ofw[v.ParamName.ValueString()] = entities.OutputFormatExtended{
 				Description: v.Description.ValueString(),
 				Object:      make(map[string]string, len(v.Object)),
 				Options:     make(map[string]string, len(v.Options)),
@@ -498,12 +499,36 @@ func (r *TaskResource) FormatOutputFormat(data TaskResourceModel) map[string]ent
 				ItemType:    v.ItemType.ValueString(),
 			}
 			for k, obv := range v.Object {
-				ofw[v.Name.ValueString()].Object[k] = obv.ValueString()
+				ofw[v.ParamName.ValueString()].Object[k] = obv.ValueString()
 			}
 			for k, obv := range v.Options {
-				ofw[v.Name.ValueString()].Options[k] = obv.ValueString()
+				ofw[v.ParamName.ValueString()].Options[k] = obv.ValueString()
 			}
 		}
 	}
 	return ofw
+}
+
+func (r *TaskResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	var trm TaskResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &trm)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ofc := &OutputFormatModelCollection{
+		OutputFormats: make([]OutputFormatModel, 0),
+	}
+	for k, v := range trm.OutputFormat {
+		ofc.OutputFormats = append(ofc.OutputFormats, OutputFormatModel{
+			ParamName: types.StringValue(k),
+			Type:      types.StringValue(v.ValueString()),
+		})
+	}
+
+	if trm.OutputFormats != nil {
+		ofc.OutputFormats = append(ofc.OutputFormats, trm.OutputFormats.OutputFormats...)
+	}
+	trm.OutputFormat = make(map[string]types.String)
+	trm.OutputFormats = ofc
+	req.Plan.Set(ctx, &trm)
 }

@@ -73,7 +73,7 @@ Optional:
 
 Required:
 
-- `name` (String)
+- `param_name` (String)
 - `type` (String)
 
 Optional:
