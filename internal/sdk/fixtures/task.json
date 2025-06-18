@@ -11,15 +11,11 @@
         "user_prompt": "Your task is to validate the uploaded image and determine whether it will be suitable for authentication and onboarding checks. If the image of the person is clear and typical of a passport style photo then set the compliance field to true. Provide rationale for your decision in the rationale field. If the compliance result is false, then provide a helpful hint for the customer who has submitted the photo informing them why it is unacceptable and some steps to remedy it, place this into the hint field. Determine whether the following description matches the provided image: {description}",
         "llm_model_id": "019010a2-8327-2607-11d7-41bb0a8936d3",
         "output_format": {
-          "compliance": "bool",
-          "hint": {
-            "type": "str"
+          "foo": {
+            "type": "str",
+            "description": "A string field for foo"
           },
-          "match": {
-            "type": "bool",
-            "description": "True if the provided description is a close match"
-          },
-          "rationale": "str"
+          "bar": "str"
         },
         "id": "019011e6-e530-3aca-6cf7-2973387c255d",
         "created": "2024-06-13T14:01:03Z",

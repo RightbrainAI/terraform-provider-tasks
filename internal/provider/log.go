@@ -6,8 +6,21 @@ package provider
 import (
 	"context"
 
+	sdk "terraform-provider-tasks/internal/sdk"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+type Logger interface {
+	Debug(msg string, args ...any)
+	Info(msg string, args ...any)
+	Warn(msg string, args ...any)
+	Error(msg string, args ...any)
+}
+
+func NewTerraformLog() sdk.Log {
+	return &TerraformLog{}
+}
 
 type TerraformLog struct {
 }

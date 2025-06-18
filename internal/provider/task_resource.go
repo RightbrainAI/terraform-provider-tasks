@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"terraform-provider-tasks/internal/sdk"
-	entitites "terraform-provider-tasks/internal/sdk/entities"
+	entities "terraform-provider-tasks/internal/sdk/entities"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 const TASK_SCHEMA_VERSION = 0
@@ -27,6 +28,7 @@ const TASK_SCHEMA_VERSION = 0
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &TaskResource{}
 var _ resource.ResourceWithImportState = &TaskResource{}
+var _ resource.ResourceWithModifyPlan = &TaskResource{}
 
 func NewTaskResource() resource.Resource {
 	return &TaskResource{}
@@ -37,7 +39,7 @@ type TaskResource struct {
 	client *sdk.TasksClient
 }
 
-type InputProcessorsModel struct {
+type InputProcessorModelCollection struct {
 	InputProcessors []InputProcessorModel `tfsdk:"input_processor"`
 }
 
@@ -45,6 +47,20 @@ type InputProcessorModel struct {
 	ParamName      types.String            `tfsdk:"param_name"`
 	InputProcessor types.String            `tfsdk:"input_processor"`
 	Config         map[string]types.String `tfsdk:"config"`
+}
+
+type OutputFormatModelCollection struct {
+	OutputFormats []OutputFormatModel `tfsdk:"output_format"`
+}
+
+// OutputFormat represents the structure of the output format in a revision.
+type OutputFormatModel struct {
+	Description types.String            `tfsdk:"description"`
+	Object      map[string]types.String `tfsdk:"object"`
+	Options     map[string]types.String `tfsdk:"options"`
+	Type        types.String            `tfsdk:"type"`
+	ParamName   types.String            `tfsdk:"param_name"`
+	ItemType    types.String            `tfsdk:"item_type"`
 }
 
 // TaskResourceModel describes the resource data model.
@@ -56,14 +72,15 @@ type TaskResourceModel struct {
 	Description     types.String `tfsdk:"description"`
 	ExposedToAgents types.Bool   `tfsdk:"exposed_to_agents"`
 
-	SystemPrompt    types.String            `tfsdk:"system_prompt"`
-	UserPrompt      types.String            `tfsdk:"user_prompt"`
-	LLMModelID      types.String            `tfsdk:"llm_model_id"`
-	ImageRequired   types.Bool              `tfsdk:"image_required"`
-	OutputFormat    map[string]types.String `tfsdk:"output_format"`
-	OutputModality  types.String            `tfsdk:"output_modality"`
-	InputProcessors *InputProcessorsModel   `tfsdk:"input_processors"`
-	OptimiseImages  types.Bool              `tfsdk:"optimise_images"`
+	SystemPrompt    types.String                   `tfsdk:"system_prompt"`
+	UserPrompt      types.String                   `tfsdk:"user_prompt"`
+	LLMModelID      types.String                   `tfsdk:"llm_model_id"`
+	ImageRequired   types.Bool                     `tfsdk:"image_required"`
+	OutputFormat    map[string]types.String        `tfsdk:"output_format"`
+	OutputFormats   *OutputFormatModelCollection   `tfsdk:"output_formats"`
+	OutputModality  types.String                   `tfsdk:"output_modality"`
+	InputProcessors *InputProcessorModelCollection `tfsdk:"input_processors"`
+	OptimiseImages  types.Bool                     `tfsdk:"optimise_images"`
 
 	ActiveRevisionID types.String `tfsdk:"active_revision_id"`
 }
@@ -72,7 +89,11 @@ func (trm *TaskResourceModel) HasInputProcessors() bool {
 	return trm.InputProcessors != nil && len(trm.InputProcessors.InputProcessors) > 0
 }
 
-func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entitites.Task) error {
+func (trm *TaskResourceModel) HasOutputFormats() bool {
+	return trm.OutputFormats != nil
+}
+
+func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entities.Task) error {
 
 	rev, err := task.GetActiveRevision()
 	if err != nil {
@@ -85,15 +106,17 @@ func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entitites.Task) error
 	trm.Public = types.BoolValue(task.Public)
 	trm.Description = types.StringValue(task.Description)
 
+	trm.ExposedToAgents = types.BoolValue(task.ExposedToAgents)
+	trm.ImageRequired = types.BoolValue(rev.ImageRequired)
+	trm.LLMModelID = types.StringValue(rev.LLMModelID)
 	trm.OptimiseImages = types.BoolValue(rev.OptimiseImages)
+	trm.OutputModality = types.StringValue(rev.OutputModality)
 	trm.SystemPrompt = types.StringValue(rev.SystemPrompt)
 	trm.UserPrompt = types.StringValue(rev.UserPrompt)
-	trm.LLMModelID = types.StringValue(rev.LLMModelID)
-	trm.ImageRequired = types.BoolValue(rev.ImageRequired)
-	trm.ExposedToAgents = types.BoolValue(task.ExposedToAgents)
+	trm.ActiveRevisionID = types.StringValue(rev.ID)
 
 	if rev.HasInputProcessors() {
-		trm.InputProcessors = &InputProcessorsModel{
+		trm.InputProcessors = &InputProcessorModelCollection{
 			InputProcessors: make([]InputProcessorModel, len(*rev.InputProcessors)),
 		}
 		for i, ip := range *rev.InputProcessors {
@@ -108,7 +131,36 @@ func (trm *TaskResourceModel) PopulateFromTaskEntity(task *entitites.Task) error
 		}
 	}
 
-	trm.ActiveRevisionID = types.StringValue(rev.ID)
+	trm.OutputFormat = make(map[string]types.String)
+	trm.OutputFormats = &OutputFormatModelCollection{
+		OutputFormats: make([]OutputFormatModel, 0),
+	}
+
+	for k, v := range rev.OutputFormat {
+		if v.IsSimple() {
+			trm.OutputFormat[k] = types.StringValue(v.Simple.String())
+			trm.OutputFormats.OutputFormats = append(trm.OutputFormats.OutputFormats, OutputFormatModel{
+				ParamName: types.StringValue(k),
+				Type:      types.StringValue(v.Simple.String()),
+			})
+		}
+		if v.IsExtended() {
+			of := OutputFormatModel{
+				Type:        types.StringValue(v.Extended.Type),
+				Description: types.StringValue(v.Extended.Description),
+				Object:      make(map[string]types.String, len(v.Extended.Object)),
+				Options:     make(map[string]types.String, len(v.Extended.Options)),
+				ItemType:    types.StringValue(v.Extended.ItemType),
+			}
+			for k, v := range v.Extended.Object {
+				of.Object[k] = types.StringValue(v)
+			}
+			for k, v := range v.Extended.Options {
+				of.Options[k] = types.StringValue(v)
+			}
+			trm.OutputFormats.OutputFormats = append(trm.OutputFormats.OutputFormats, of)
+		}
+	}
 
 	return nil
 }
@@ -199,6 +251,36 @@ func (r *TaskResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"output_formats": schema.SingleNestedBlock{
+				Blocks: map[string]schema.Block{
+					"output_format": schema.ListNestedBlock{
+						NestedObject: schema.NestedBlockObject{
+							Attributes: map[string]schema.Attribute{
+								"param_name": schema.StringAttribute{
+									Required: true,
+								},
+								"type": schema.StringAttribute{
+									Required: true,
+								},
+								"description": schema.StringAttribute{
+									Optional: true,
+								},
+								"item_type": schema.StringAttribute{
+									Optional: true,
+								},
+								"object": schema.MapAttribute{
+									Optional:    true,
+									ElementType: types.StringType,
+								},
+								"options": schema.MapAttribute{
+									Optional:    true,
+									ElementType: types.StringType,
+								},
+							},
+						},
+					},
+				},
+			},
 			"input_processors": schema.SingleNestedBlock{
 				Blocks: map[string]schema.Block{
 					"input_processor": schema.ListNestedBlock{
@@ -250,6 +332,7 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "Error creating task resource")
 		return
 	}
 
@@ -264,11 +347,8 @@ func (r *TaskResource) Create(ctx context.Context, req resource.CreateRequest, r
 	in.ImageRequired = data.ImageRequired.ValueBool()
 	in.OutputModality = data.OutputModality.ValueString()
 
-	for k, v := range data.OutputFormat {
-		in.OutputFormat[k] = v.ValueString()
-	}
-
 	in.InputProcessors = r.FormatInputProcessors(data)
+	in.OutputFormat = r.FormatOutputFormat(data)
 
 	task, err := r.client.Create(ctx, in)
 	if err != nil {
@@ -292,6 +372,7 @@ func (r *TaskResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "Error reading task resource")
 		return
 	}
 
@@ -316,6 +397,7 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "Error updating task resource")
 		return
 	}
 
@@ -330,11 +412,8 @@ func (r *TaskResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	in.ImageRequired = data.ImageRequired.ValueBool()
 	in.OutputModality = data.OutputModality.ValueString()
 
-	for k, v := range data.OutputFormat {
-		in.OutputFormat[k] = v.ValueString()
-	}
-
 	in.InputProcessors = r.FormatInputProcessors(data)
+	in.OutputFormat = r.FormatOutputFormat(data)
 
 	task, err := r.client.Update(ctx, in)
 	if err != nil {
@@ -358,6 +437,7 @@ func (r *TaskResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
+		tflog.Error(ctx, "Error deleting task resource")
 		return
 	}
 
@@ -372,13 +452,15 @@ func (r *TaskResource) ImportState(ctx context.Context, req resource.ImportState
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *TaskResource) FormatInputProcessors(data TaskResourceModel) *[]entitites.InputProcessor {
-	ips := []entitites.InputProcessor{}
+// FormatInputProcessors converts the TaskResourceModel's input processors data into the
+// format expected by the SDK.
+func (r *TaskResource) FormatInputProcessors(data TaskResourceModel) *[]entities.InputProcessor {
+	ips := []entities.InputProcessor{}
 	if !data.HasInputProcessors() {
 		return &ips
 	}
 	for _, v := range data.InputProcessors.InputProcessors {
-		ip := entitites.InputProcessor{
+		ip := entities.InputProcessor{
 			ParamName:      v.ParamName.ValueString(),
 			InputProcessor: v.InputProcessor.ValueString(),
 		}
@@ -391,4 +473,62 @@ func (r *TaskResource) FormatInputProcessors(data TaskResourceModel) *[]entitite
 		ips = append(ips, ip)
 	}
 	return &ips
+}
+
+// FormatOutputFormat converts the TaskResourceModel's output format data into the
+// format expected by the SDK.
+//
+// It handles both simple and extended output formats, ensuring that the
+// output format is correctly structured for the Task entity.
+func (r *TaskResource) FormatOutputFormat(data TaskResourceModel) map[string]entities.OutputFormatExtended {
+	ofw := make(map[string]entities.OutputFormatExtended)
+	for k, v := range data.OutputFormat {
+		if v.ValueString() != "" {
+			ofw[k] = entities.OutputFormatExtended{
+				Type: v.ValueString(),
+			}
+		}
+	}
+	if data.HasOutputFormats() {
+		for _, v := range data.OutputFormats.OutputFormats {
+			ofw[v.ParamName.ValueString()] = entities.OutputFormatExtended{
+				Description: v.Description.ValueString(),
+				Object:      make(map[string]string, len(v.Object)),
+				Options:     make(map[string]string, len(v.Options)),
+				Type:        v.Type.ValueString(),
+				ItemType:    v.ItemType.ValueString(),
+			}
+			for k, obv := range v.Object {
+				ofw[v.ParamName.ValueString()].Object[k] = obv.ValueString()
+			}
+			for k, obv := range v.Options {
+				ofw[v.ParamName.ValueString()].Options[k] = obv.ValueString()
+			}
+		}
+	}
+	return ofw
+}
+
+func (r *TaskResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	var trm TaskResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &trm)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ofc := &OutputFormatModelCollection{
+		OutputFormats: make([]OutputFormatModel, 0),
+	}
+	for k, v := range trm.OutputFormat {
+		ofc.OutputFormats = append(ofc.OutputFormats, OutputFormatModel{
+			ParamName: types.StringValue(k),
+			Type:      types.StringValue(v.ValueString()),
+		})
+	}
+
+	if trm.OutputFormats != nil {
+		ofc.OutputFormats = append(ofc.OutputFormats, trm.OutputFormats.OutputFormats...)
+	}
+	trm.OutputFormat = make(map[string]types.String)
+	trm.OutputFormats = ofc
+	req.Plan.Set(ctx, &trm)
 }

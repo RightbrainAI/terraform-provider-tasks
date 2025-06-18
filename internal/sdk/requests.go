@@ -4,48 +4,48 @@
 package sdk
 
 import (
-	entitites "terraform-provider-tasks/internal/sdk/entities"
+	entities "terraform-provider-tasks/internal/sdk/entities"
 )
 
 type CreateTaskRequest struct {
-	Description     string                      `json:"description"`
-	Enabled         bool                        `json:"enabled"`
-	ImageRequired   bool                        `json:"image_required"`
-	InputProcessors *[]entitites.InputProcessor `json:"input_processors"`
-	LLMModelID      string                      `json:"llm_model_id"`
-	Name            string                      `json:"name"`
-	OutputFormat    map[string]string           `json:"output_format"`
-	OutputModality  string                      `json:"output_modality"`
-	Public          bool                        `json:"public"`
-	SystemPrompt    string                      `json:"system_prompt"`
-	UserPrompt      string                      `json:"user_prompt"`
+	Description     string                                   `json:"description,omitempty"`
+	Enabled         bool                                     `json:"enabled,omitempty"`
+	ImageRequired   bool                                     `json:"image_required,omitempty"`
+	InputProcessors *[]entities.InputProcessor               `json:"input_processors,omitempty"`
+	LLMModelID      string                                   `json:"llm_model_id,omitempty"`
+	Name            string                                   `json:"name,omitempty"`
+	OutputFormat    map[string]entities.OutputFormatExtended `json:"output_format,omitempty"`
+	OutputModality  string                                   `json:"output_modality,omitempty"`
+	Public          bool                                     `json:"public,omitempty"`
+	SystemPrompt    string                                   `json:"system_prompt,omitempty"`
+	UserPrompt      string                                   `json:"user_prompt,omitempty"`
 }
 
 func NewCreateTaskRequest() CreateTaskRequest {
 	return CreateTaskRequest{
-		OutputFormat: make(map[string]string, 0),
+		OutputFormat: make(map[string]entities.OutputFormatExtended),
 	}
 }
 
 type UpdateTaskRequest struct {
-	ID              string                      `json:"id"`
-	Description     string                      `json:"description"`
-	Enabled         bool                        `json:"enabled"`
-	ImageRequired   bool                        `json:"image_required"`
-	InputProcessors *[]entitites.InputProcessor `json:"input_processors"`
-	LLMModelID      string                      `json:"llm_model_id"`
-	Name            string                      `json:"name"`
-	OutputFormat    map[string]string           `json:"output_format"`
-	OutputModality  string                      `json:"output_modality"`
-	Public          bool                        `json:"public"`
-	SystemPrompt    string                      `json:"system_prompt"`
-	UserPrompt      string                      `json:"user_prompt"`
+	ID              string                                   `json:"id,omitempty"`
+	Description     string                                   `json:"description,omitempty"`
+	Enabled         bool                                     `json:"enabled,omitempty"`
+	ImageRequired   bool                                     `json:"image_required,omitempty"`
+	InputProcessors *[]entities.InputProcessor               `json:"input_processors,omitempty"`
+	LLMModelID      string                                   `json:"llm_model_id,omitempty"`
+	Name            string                                   `json:"name,omitempty"`
+	OutputFormat    map[string]entities.OutputFormatExtended `json:"output_format,omitempty"`
+	OutputModality  string                                   `json:"output_modality,omitempty"`
+	Public          bool                                     `json:"public,omitempty"`
+	SystemPrompt    string                                   `json:"system_prompt,omitempty"`
+	UserPrompt      string                                   `json:"user_prompt,omitempty"`
 }
 
 func NewUpdateTaskRequest(id string) UpdateTaskRequest {
 	return UpdateTaskRequest{
 		ID:           id,
-		OutputFormat: make(map[string]string, 0),
+		OutputFormat: make(map[string]entities.OutputFormatExtended),
 	}
 }
 
